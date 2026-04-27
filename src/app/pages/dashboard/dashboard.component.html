@@ -1,0 +1,58 @@
+<div id="topbar">
+  <h1>Dashboard</h1>
+</div>
+
+<div id="content">
+  @if (loading) {
+    <div class="empty-state">Loading dashboard...</div>
+  } @else {
+    <div class="stat-grid">
+      <div class="stat-card total"><div class="stat-num">{{ data?.cards?.total || 0 }}</div><div class="stat-label">Total Tasks</div></div>
+      <div class="stat-card today"><div class="stat-num">{{ data?.cards?.todayTasks || 0 }}</div><div class="stat-label">Today's Tasks</div></div>
+      <div class="stat-card pending"><div class="stat-num">{{ data?.cards?.pending || 0 }}</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card working"><div class="stat-num">{{ data?.cards?.working || 0 }}</div><div class="stat-label">Working</div></div>
+      <div class="stat-card done-c"><div class="stat-num">{{ data?.cards?.done || 0 }}</div><div class="stat-label">Done</div></div>
+      <div class="stat-card backend"><div class="stat-num">{{ data?.cards?.backendNeeded || 0 }}</div><div class="stat-label">Backend Needed</div></div>
+    </div>
+
+    <div class="dash-row">
+      <div class="dash-box">
+        <div class="section-title">👤 Person-wise Tasks</div>
+        @for (p of data?.personWise || []; track p.person) {
+          <div class="person-row">
+            <span class="person-name">{{ p.person }}</span>
+            <div class="person-bar-wrap"><div class="person-bar" [style.width.%]="(p.count / maxCount(data?.personWise)) * 100"></div></div>
+            <span class="person-count">{{ p.count }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="dash-box">
+        <div class="section-title">📦 Module-wise Tasks</div>
+        @for (m of data?.moduleWise || []; track m.module) {
+          <div class="person-row">
+            <span class="person-name">{{ m.module }}</span>
+            <div class="person-bar-wrap"><div class="person-bar" [style.width.%]="(m.count / maxCount(data?.moduleWise)) * 100"></div></div>
+            <span class="person-count">{{ m.count }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="dash-box">
+      <div class="section-title">⏰ Recent Activity</div>
+      @for (h of data?.recentActivity || []; track h._id) {
+        <div class="history-item">
+          <div class="history-dot">{{ h.field === 'created' ? '✨' : h.field === 'status' ? '🔄' : '✏️' }}</div>
+          <div class="history-content">
+            <div class="history-action"><strong>{{ h.changedBy }}</strong> updated <em>{{ h.field }}</em></div>
+            <div class="history-task">{{ h.taskDesc }}</div>
+            <div class="history-meta">{{ h.createdAt | date:'dd-MMM-yyyy HH:mm' }}</div>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">No recent activity</div>
+      }
+    </div>
+  }
+</div>

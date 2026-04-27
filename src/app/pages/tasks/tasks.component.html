@@ -1,0 +1,453 @@
+<div id="topbar">
+  <h1>{{ title }}</h1>
+
+  @if (auth.canModifyTasks()) {
+    <button class="btn btn-primary" (click)="openAddTask()">+ Add Task</button>
+  }
+
+  <button class="btn btn-secondary btn-sm" (click)="exportCSV()">
+    ⬇ Export CSV
+  </button>
+</div>
+
+<div id="content" style="overflow-y: auto; height: 100%">
+  <div class="quick-filters">
+    <button
+      class="qf-btn"
+      [class.active]="quickFilter === 'all'"
+      (click)="setQuickFilter('all')"
+    >
+      All
+    </button>
+
+    @for (s of statuses; track s) {
+      <button
+        class="qf-btn"
+        [class.active]="quickFilter === s"
+        (click)="setQuickFilter(s)"
+      >
+        {{ s }}
+      </button>
+    }
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Search</div>
+      <input
+        type="text"
+        class="search-input"
+        [(ngModel)]="filters.search"
+        (input)="applyFilters()"
+        placeholder="Search tasks..."
+      />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Date</div>
+      <input type="date" [(ngModel)]="filters.date" (change)="applyFilters()" />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Person</div>
+      <select [(ngModel)]="filters.person" (change)="applyFilters()">
+        <option value="">All</option>
+        @for (p of persons; track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Module</div>
+      <input
+        type="text"
+        [(ngModel)]="filters.module"
+        (input)="applyFilters()"
+        placeholder="Module"
+      />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Status</div>
+      <select [(ngModel)]="filters.status" (change)="applyFilters()">
+        <option value="">All</option>
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Priority</div>
+      <select [(ngModel)]="filters.priority" (change)="applyFilters()">
+        <option value="">All</option>
+        @for (p of priorities; track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Type</div>
+      <select [(ngModel)]="filters.workingType" (change)="applyFilters()">
+        <option value="">All</option>
+        @for (t of workingTypes; track t) {
+          <option [value]="t">{{ t }}</option>
+        }
+      </select>
+    </div>
+
+    <button class="btn btn-secondary btn-sm" (click)="clearFilters()">
+      ✕ Clear
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-count">{{ tasks.length }} tasks</span>
+      <button class="btn-icon ml-auto" (click)="loadTasks()">↻</button>
+    </div>
+
+    <div style="overflow-x: auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Task</th>
+            <th>Module</th>
+            <th>Page</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Person</th>
+            <th>Test</th>
+            <th>Attachments</th>
+            <th>Remarks</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (loading) {
+            <tr>
+              <td colspan="12">
+                <div class="empty-state">Loading...</div>
+              </td>
+            </tr>
+          } @else if (error) {
+            <tr>
+              <td colspan="12">
+                <div class="empty-state">{{ error }}</div>
+              </td>
+            </tr>
+          } @else {
+            @for (task of tasks; track task._id) {
+              <tr [class.carried]="task.isCarriedForward">
+                <td class="td-date">
+                  {{ task.date | date: "dd-MM-yyyy" }}<br />
+                  <span class="text-xs text-muted">{{ task.day }}</span>
+
+                  @if (task.isCarriedForward) {
+                    <div class="carried-badge">🔄 Carried</div>
+                  }
+                </td>
+
+                <td class="td-desc">
+                  <span class="td-desc-text">{{ task.description }}</span>
+                  <div class="td-sub">by {{ task.createdBy }}</div>
+
+                  @if ((task.reworkCount || 0) > 0) {
+                    <div class="rework-count">
+                      Rework: {{ task.reworkCount }}
+                    </div>
+                  }
+                </td>
+
+                <td>{{ task.module }}</td>
+                <td>{{ task.page }}</td>
+
+                <td>
+                  <span class="badge badge-{{ badgeClass(task.workingType) }}">
+                    {{ task.workingType }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge badge-{{ badgeClass(task.status) }}">
+                    {{ task.status }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge badge-{{ badgeClass(task.priority) }}">
+                    {{ task.priority }}
+                  </span>
+                </td>
+
+                <td>
+                  <strong>{{ task.person }}</strong>
+                </td>
+
+                <td>
+                  @if (task.status === "Testing") {
+                    <div class="td-actions">
+                      <button
+                        class="btn btn-primary btn-sm"
+                        (click)="markTestResult(task, true)"
+                      >
+                        Pass
+                      </button>
+                      <button
+                        class="btn btn-danger btn-sm"
+                        (click)="markTestResult(task, false)"
+                      >
+                        Fail
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="text-xs text-muted">
+                      {{ task.testRemarks || "—" }}
+                    </div>
+                  }
+                </td>
+
+                <td>
+                  @if (task.attachments?.length) {
+                    <div class="attachment-list compact">
+                      @for (file of task.attachments; track file.fileName) {
+                        <a
+                          class="attachment-link"
+                          [href]="getAttachmentUrl(file.filePath)"
+                          target="_blank"
+                          [title]="file.originalName"
+                        >
+                          📎 {{ file.originalName }}
+                        </a>
+                      }
+                    </div>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+
+                <td class="remarks-cell">
+                  {{ task.remarks || "—" }}
+                </td>
+
+                <td>
+                  @if (auth.canModifyTasks()) {
+                    <div class="td-actions">
+                      <select
+                        class="mini-select"
+                        [ngModel]="task.status"
+                        (ngModelChange)="updateStatus(task, $event)"
+                      >
+                        @for (s of statuses; track s) {
+                          <option [value]="s">{{ s }}</option>
+                        }
+                      </select>
+
+                      <button class="btn-icon" (click)="openEditTask(task)">
+                        ✏️
+                      </button>
+
+                      @if (auth.isAdmin()) {
+                        <button
+                          class="btn-icon danger"
+                          (click)="deleteTask(task)"
+                        >
+                          🗑
+                        </button>
+                      }
+                    </div>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="12">
+                  <div class="empty-state">No tasks found</div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showModal) {
+  <div class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          {{ editId ? "Edit Task" : "Add Task" }}
+        </div>
+
+        <button class="btn-icon" (click)="showModal = false">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date <span class="req">*</span></label>
+            <input type="date" [(ngModel)]="form.date" />
+          </div>
+
+          <div class="form-group">
+            <label>Module <span class="req">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="form.module"
+              placeholder="e.g. Procurement"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Page <span class="req">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="form.page"
+              placeholder="e.g. Purchase Order Page"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Assigned Person <span class="req">*</span></label>
+            <select [(ngModel)]="form.person">
+              @for (p of persons; track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label>Description <span class="req">*</span></label>
+            <textarea
+              [(ngModel)]="form.description"
+              placeholder="Describe the task..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Working Type</label>
+            <select [(ngModel)]="form.workingType">
+              @for (t of workingTypes; track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Status</label>
+            <select [(ngModel)]="form.status">
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Priority</label>
+            <select [(ngModel)]="form.priority">
+              @for (p of priorities; track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label>Attachments</label>
+
+            <input
+              type="file"
+              multiple
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+              (change)="onFilesSelected($event)"
+            />
+
+            @if (selectedFiles.length) {
+              <div class="selected-files">
+                @for (file of selectedFiles; track file.name; let i = $index) {
+                  <div class="selected-file">
+                    📎 {{ file.name }}
+                    <button
+                      type="button"
+                      class="remove-file"
+                      (click)="removeSelectedFile(i)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (editingTaskAttachments.length) {
+              <div class="saved-attachments">
+                <div class="saved-title">Saved Attachments</div>
+
+                @for (file of editingTaskAttachments; track file.fileName) {
+                  <div class="saved-attachment">
+                    <a
+                      [href]="getAttachmentUrl(file.filePath)"
+                      target="_blank"
+                      [title]="file.originalName"
+                    >
+                      📎 {{ file.originalName }}
+                    </a>
+
+                    <div class="attachment-actions">
+                      <a
+                        class="btn btn-secondary btn-sm"
+                        [href]="getAttachmentUrl(file.filePath)"
+                        target="_blank"
+                      >
+                        Preview
+                      </a>
+
+                      <a
+                        class="btn btn-primary btn-sm"
+                        [href]="getAttachmentUrl(file.filePath)"
+                        [download]="file.originalName"
+                      >
+                        Download
+                      </a>
+
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        (click)="deleteSavedAttachment(file.fileName)"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-group full">
+            <label>Remarks</label>
+            <textarea
+              [(ngModel)]="form.remarks"
+              placeholder="Optional notes, API status, blockers..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showModal = false">
+          Cancel
+        </button>
+        <button class="btn btn-primary" (click)="saveTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,129 @@
+<div id="topbar">
+  <h1>Reports</h1>
+  <button class="btn btn-secondary btn-sm" (click)="exportCSV()">⬇ Export CSV</button>
+</div>
+
+<div id="content">
+  <div class="dash-box" style="margin-bottom: 20px;">
+    <div class="section-title">📲 Daily WhatsApp Report</div>
+
+    <div class="filter-bar" style="margin-bottom: 12px;">
+      <div class="filter-group">
+        <div class="filter-label">Report Date</div>
+        <input type="date" [(ngModel)]="selectedDate" (change)="loadDailyReport()" />
+      </div>
+
+      <button class="btn btn-primary btn-sm" (click)="copyDailyReport()">
+        Copy WhatsApp Message
+      </button>
+
+      @if (reportCopied) {
+        <span class="copy-success">Copied ✓</span>
+      }
+    </div>
+
+    <textarea
+      class="whatsapp-report"
+      readonly
+      [value]="dailyReport?.message || 'No report found'"
+    ></textarea>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">From</div>
+      <input type="date" [(ngModel)]="filters.from" (change)="loadReport()" />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">To</div>
+      <input type="date" [(ngModel)]="filters.to" (change)="loadReport()" />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Person</div>
+      <select [(ngModel)]="filters.person" (change)="loadReport()">
+        <option value="">All</option>
+        @for (p of persons; track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Module</div>
+      <input type="text" [(ngModel)]="filters.module" (input)="loadReport()" />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Status</div>
+      <select [(ngModel)]="filters.status" (change)="loadReport()">
+        <option value="">All</option>
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="empty-state">Loading report...</div>
+  } @else {
+    <div class="stat-grid">
+      <div class="stat-card total">
+        <div class="stat-num">{{ data?.total || 0 }}</div>
+        <div class="stat-label">Filtered Tasks</div>
+      </div>
+    </div>
+
+    <div class="report-grid">
+      <div class="report-box">
+        <div class="section-title">Person Wise</div>
+        <table class="report-table">
+          @for (x of data?.byPerson || []; track x.person) {
+            <tr>
+              <td>{{ x.person }}</td>
+              <td>{{ x.count }}</td>
+            </tr>
+          }
+        </table>
+      </div>
+
+      <div class="report-box">
+        <div class="section-title">Module Wise</div>
+        <table class="report-table">
+          @for (x of data?.byModule || []; track x.module) {
+            <tr>
+              <td>{{ x.module }}</td>
+              <td>{{ x.count }}</td>
+            </tr>
+          }
+        </table>
+      </div>
+
+      <div class="report-box">
+        <div class="section-title">Status Wise</div>
+        <table class="report-table">
+          @for (x of data?.byStatus || []; track x.status) {
+            <tr>
+              <td>{{ x.status }}</td>
+              <td>{{ x.count }}</td>
+            </tr>
+          }
+        </table>
+      </div>
+
+      <div class="report-box">
+        <div class="section-title">Date Wise</div>
+        <table class="report-table">
+          @for (x of data?.byDate || []; track x.date) {
+            <tr>
+              <td>{{ x.date }}</td>
+              <td>{{ x.count }}</td>
+            </tr>
+          }
+        </table>
+      </div>
+    </div>
+  }
+</div>

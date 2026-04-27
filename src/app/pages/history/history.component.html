@@ -1,0 +1,60 @@
+<div id="topbar">
+  <h1>History Log</h1>
+</div>
+
+<div id="content">
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Person</div>
+      <select [(ngModel)]="filters.person" (change)="loadHistory()">
+        <option value="">All</option>
+        @for (p of persons; track p) { <option [value]="p">{{ p }}</option> }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Date</div>
+      <input type="date" [(ngModel)]="filters.date" (change)="loadHistory()" />
+    </div>
+
+    <button class="btn btn-secondary btn-sm" (click)="clear()">✕ Clear</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-count">{{ history.length }} entries</span>
+    </div>
+
+    <div style="padding:0 18px">
+      @if (loading) {
+        <div class="empty-state">Loading...</div>
+      } @else {
+        @for (h of history; track h._id) {
+          <div class="history-item">
+            <div class="history-dot">{{ h.field === 'created' ? '✨' : h.field === 'status' ? '🔄' : h.field === 'remark' ? '💬' : '✏️' }}</div>
+            <div class="history-content">
+              <div class="history-action">
+                <strong>{{ h.changedBy }}</strong>
+                {{ h.field === 'created' ? 'created task' : h.field === 'remark' ? 'added remark' : 'changed ' + h.field }}
+                @if (h.oldVal || h.newVal) {
+                  <span class="from-to">
+                    <span class="from-val">{{ h.oldVal }}</span>
+                    <span class="arrow-icon">→</span>
+                    <span class="to-val">{{ h.newVal }}</span>
+                  </span>
+                }
+              </div>
+              <div class="history-task">{{ h.taskDesc }}</div>
+              @if (h.remark) {
+                <div class="text-xs text-muted">💬 {{ h.remark }}</div>
+              }
+              <div class="history-meta">{{ h.createdAt | date:'dd-MMM-yyyy HH:mm' }}</div>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state">No history found</div>
+        }
+      }
+    </div>
+  </div>
+</div>

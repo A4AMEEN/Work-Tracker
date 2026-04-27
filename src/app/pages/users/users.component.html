@@ -1,0 +1,69 @@
+<div id="topbar">
+  <h1>User Management</h1>
+  <button class="btn btn-primary" (click)="openAdd()">+ Add User</button>
+</div>
+
+<div id="content">
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-count">{{ users.length }} users</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (u of users; track u._id || u.id) {
+          <tr>
+            <td><strong>{{ u.name }}</strong></td>
+            <td>{{ u.username }}</td>
+            <td><span class="badge badge-frontend">{{ u.role }}</span></td>
+            <td>{{ u.isActive ? 'Yes' : 'No' }}</td>
+            <td>
+              <button class="btn btn-secondary btn-sm" (click)="toggleActive(u)">
+                {{ u.isActive ? 'Deactivate' : 'Activate' }}
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="deleteUser(u)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (showModal) {
+  <div class="modal-overlay">
+    <div class="modal" style="width:420px">
+      <div class="modal-header">
+        <div class="modal-title">Add User</div>
+        <button class="btn-icon" (click)="showModal=false">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group"><label>Name</label><input type="text" [(ngModel)]="form.name" /></div>
+        <div class="form-group"><label>Username</label><input type="text" [(ngModel)]="form.username" /></div>
+        <div class="form-group"><label>Password</label><input type="password" [(ngModel)]="form.password" /></div>
+        <div class="form-group">
+          <label>Role</label>
+          <select [(ngModel)]="form.role">
+            @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showModal=false">Cancel</button>
+        <button class="btn btn-primary" (click)="createUser()">Save</button>
+      </div>
+    </div>
+  </div>
+}
