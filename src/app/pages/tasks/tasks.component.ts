@@ -220,10 +220,17 @@ this.editingTaskAttachments = task.attachments || [];
     });
   }
 
-  getAttachmentUrl(path: string): string {
-    return `${this.apiBase}${path}`;
+getAttachmentUrl(path: string): string {
+  if (!path) return '';
+
+  // Cloudinary/full external URL
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
   }
 
+  // Old local upload path
+  return `${this.apiBase}${path}`;
+}
   exportCSV(): void {
     const rows = this.tasks.map(t => ({
       date: t.date,
