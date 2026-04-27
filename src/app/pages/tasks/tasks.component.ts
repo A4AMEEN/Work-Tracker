@@ -19,13 +19,26 @@ type TaskView = 'all' | 'today' | 'pending' | 'done' | 'backend' | 'my';
 export class TasksComponent implements OnInit {
   title = 'Tasks';
   view: TaskView = 'all';
+
   tasks: Task[] = [];
   loading = false;
+  saving = false;
   error = '';
 
   apiBase = environment.apiUrl.replace('/api', '');
 
   selectedFiles: File[] = [];
+  editingTaskAttachments: any[] = [];
+
+  showModal = false;
+  editId = '';
+
+  showRemarkModal = false;
+  remarkTitle = '';
+  remarkPlaceholder = '';
+  remarkText = '';
+  remarkAction: null | (() => void) = null;
+  remarkSaving = false;
 
   filters = {
     search: '',
@@ -52,11 +65,9 @@ export class TasksComponent implements OnInit {
   priorities: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
   workingTypes: WorkingType[] = ['Frontend', 'Backend', 'Both'];
 
-  showModal = false;
-  editId = '';
-  form: TaskPayload = this.emptyForm();
-editingTaskAttachments: any[] = [];
   quickFilter = 'all';
+
+  form: TaskPayload = this.emptyForm();
 
   constructor(
     private route: ActivatedRoute,
@@ -129,6 +140,7 @@ editingTaskAttachments: any[] = [];
       priority: '',
       workingType: ''
     };
+
     this.quickFilter = 'all';
   }
 
@@ -140,15 +152,16 @@ editingTaskAttachments: any[] = [];
   openAddTask(): void {
     this.editId = '';
     this.selectedFiles = [];
+    this.editingTaskAttachments = [];
     this.form = this.emptyForm();
     this.showModal = true;
-    this.editingTaskAttachments = [];
   }
 
   openEditTask(task: Task): void {
     this.editId = task._id;
     this.selectedFiles = [];
-this.editingTaskAttachments = task.attachments || [];
+    this.editingTaskAttachments = task.attachments || [];
+
     this.form = {
       date: task.date,
       module: task.module,
@@ -164,6 +177,15 @@ this.editingTaskAttachments = task.attachments || [];
     this.showModal = true;
   }
 
+  closeTaskModal(): void {
+    if (this.saving) return;
+
+    this.showModal = false;
+    this.selectedFiles = [];
+    this.editingTaskAttachments = [];
+    this.editId = '';
+  }
+
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.selectedFiles = Array.from(input.files || []);
@@ -174,40 +196,98 @@ this.editingTaskAttachments = task.attachments || [];
   }
 
   saveTask(): void {
+    if (this.saving) return;
+
     if (!this.form.date || !this.form.module || !this.form.page || !this.form.description) {
       alert('Please fill all required fields.');
       return;
     }
+
+    this.saving = true;
 
     const request = this.editId
       ? this.taskService.updateTask(this.editId, this.form, this.selectedFiles)
       : this.taskService.createTask(this.form, this.selectedFiles);
 
     request.subscribe({
-      next: () => {
+      next: (res) => {
+        const savedTask = res.data;
+
+        if (this.editId) {
+          this.tasks = this.tasks.map(t => t._id === this.editId ? savedTask : t);
+        } else {
+          this.tasks = [savedTask, ...this.tasks];
+        }
+
+        this.saving = false;
         this.showModal = false;
         this.selectedFiles = [];
-        this.loadTasks();
+        this.editingTaskAttachments = [];
+        this.editId = '';
       },
-      error: (err) => alert(err?.error?.message || 'Save failed.')
+      error: (err) => {
+        this.saving = false;
+        alert(err?.error?.message || 'Save failed.');
+      }
     });
   }
 
   updateStatus(task: Task, status: TaskStatus): void {
-    const remark = prompt('Remark optional') || '';
+    if (task.status === status) return;
 
-    this.taskService.updateStatus(task._id, status, remark).subscribe({
-      next: () => this.loadTasks(),
-      error: (err) => alert(err?.error?.message || 'Status update failed.')
-    });
+    this.openRemarkModal(
+      'Update Status',
+      `Add remark for "${status}"...`,
+      () => {
+        this.remarkSaving = true;
+
+        this.taskService.updateStatus(task._id, status, this.remarkText).subscribe({
+          next: (res) => {
+            this.tasks = this.tasks.map(t => t._id === task._id ? res.data : t);
+            this.remarkSaving = false;
+            this.closeRemarkModal();
+          },
+          error: (err) => {
+            this.remarkSaving = false;
+            alert(err?.error?.message || 'Status update failed.');
+          }
+        });
+      }
+    );
   }
 
   markTestResult(task: Task, passed: boolean): void {
-    const remark = prompt(passed ? 'Test passed remark' : 'Why test failed?') || '';
+    this.openRemarkModal(
+      passed ? 'Test Passed' : 'Test Failed',
+      passed ? 'Add test passed remark...' : 'Explain what failed...',
+      () => {
+        this.remarkSaving = true;
 
-    this.taskService.updateTestResult(task._id, passed, remark).subscribe({
-      next: () => this.loadTasks(),
-      error: (err) => alert(err?.error?.message || 'Test update failed.')
+        this.taskService.updateTestResult(task._id, passed, this.remarkText).subscribe({
+          next: (res) => {
+            this.tasks = this.tasks.map(t => t._id === task._id ? res.data : t);
+            this.remarkSaving = false;
+            this.closeRemarkModal();
+          },
+          error: (err) => {
+            this.remarkSaving = false;
+            alert(err?.error?.message || 'Test update failed.');
+          }
+        });
+      }
+    );
+  }
+
+  deleteSavedAttachment(fileName: string): void {
+    if (!this.editId) return;
+    if (!confirm('Delete this attachment?')) return;
+
+    this.taskService.deleteAttachment(this.editId, fileName).subscribe({
+      next: (res) => {
+        this.editingTaskAttachments = res.data.attachments || [];
+        this.tasks = this.tasks.map(t => t._id === this.editId ? res.data : t);
+      },
+      error: (err) => alert(err?.error?.message || 'Attachment delete failed.')
     });
   }
 
@@ -215,22 +295,48 @@ this.editingTaskAttachments = task.attachments || [];
     if (!confirm(`Delete task: ${task.description}?`)) return;
 
     this.taskService.deleteTask(task._id).subscribe({
-      next: () => this.loadTasks(),
+      next: () => {
+        this.tasks = this.tasks.filter(t => t._id !== task._id);
+      },
       error: (err) => alert(err?.error?.message || 'Delete failed. Admin only.')
     });
   }
 
-getAttachmentUrl(path: string): string {
-  if (!path) return '';
-
-  // Cloudinary/full external URL
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path;
+  openRemarkModal(title: string, placeholder: string, action: () => void): void {
+    this.remarkTitle = title;
+    this.remarkPlaceholder = placeholder;
+    this.remarkText = '';
+    this.remarkAction = action;
+    this.showRemarkModal = true;
   }
 
-  // Old local upload path
-  return `${this.apiBase}${path}`;
-}
+  confirmRemark(): void {
+    if (this.remarkSaving) return;
+
+    if (this.remarkAction) {
+      this.remarkAction();
+    }
+  }
+
+  closeRemarkModal(): void {
+    if (this.remarkSaving) return;
+
+    this.showRemarkModal = false;
+    this.remarkText = '';
+    this.remarkAction = null;
+    this.remarkSaving = false;
+  }
+
+  getAttachmentUrl(path: string): string {
+    if (!path) return '';
+
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+
+    return `${this.apiBase}${path}`;
+  }
+
   exportCSV(): void {
     const rows = this.tasks.map(t => ({
       date: t.date,
@@ -247,7 +353,9 @@ getAttachmentUrl(path: string): string {
       testRemarks: t.testRemarks || ''
     }));
 
-    const header = Object.keys(rows[0] || {});
+    if (!rows.length) return;
+
+    const header = Object.keys(rows[0]);
     const csv = [
       header.join(','),
       ...rows.map(row => header.map(key => JSON.stringify((row as any)[key] || '')).join(','))
@@ -267,20 +375,6 @@ getAttachmentUrl(path: string): string {
   badgeClass(value: string): string {
     return value.toLowerCase().replace(/ /g, '-');
   }
-
-  deleteSavedAttachment(fileName: string): void {
-  if (!this.editId) return;
-
-  if (!confirm('Delete this attachment?')) return;
-
-  this.taskService.deleteAttachment(this.editId, fileName).subscribe({
-    next: (res) => {
-      this.editingTaskAttachments = res.data.attachments || [];
-      this.loadTasks();
-    },
-    error: (err) => alert(err?.error?.message || 'Attachment delete failed.')
-  });
-}
 
   private emptyForm(): TaskPayload {
     const today = new Date().toISOString().split('T')[0];

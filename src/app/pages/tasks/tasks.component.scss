@@ -11,11 +11,39 @@
   color: var(--backend);
 }
 
-.attachment-list {
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+button:disabled {
+  pointer-events: none;
+}
+
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.attachment-list.compact {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-width: 160px;
+  max-width: 180px;
 }
 
 .attachment-link {
@@ -25,6 +53,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
 }
 
 .attachment-link:hover {
@@ -57,6 +86,49 @@
   cursor: pointer;
 }
 
+.saved-attachments {
+  margin-top: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+.saved-title {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.saved-attachment {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.saved-attachment:last-child {
+  border-bottom: none;
+}
+
+.saved-attachment a {
+  color: var(--accent);
+  font-size: 12px;
+  text-decoration: none;
+  max-width: 330px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-attachment a:hover {
+  text-decoration: underline;
+}
+
 .rework-count {
   margin-top: 4px;
   font-size: 11px;
@@ -66,23 +138,11 @@
   padding: 2px 6px;
   border-radius: 4px;
 }
-.attachment-list.compact {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-width: 180px;
+
+.remark-modal {
+  width: 420px;
 }
 
-.attachment-link {
-  color: var(--accent);
-  font-size: 12px;
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
-.attachment-link:hover {
-  text-decoration: underline;
+.remark-modal textarea {
+  min-height: 110px;
 }

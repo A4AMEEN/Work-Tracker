@@ -5,27 +5,15 @@
     <button class="btn btn-primary" (click)="openAddTask()">+ Add Task</button>
   }
 
-  <button class="btn btn-secondary btn-sm" (click)="exportCSV()">
-    ⬇ Export CSV
-  </button>
+  <button class="btn btn-secondary btn-sm" (click)="exportCSV()">⬇ Export CSV</button>
 </div>
 
-<div id="content" style="overflow-y: auto; height: 100%">
+<div id="content" style="overflow-y:auto; height:100%;">
   <div class="quick-filters">
-    <button
-      class="qf-btn"
-      [class.active]="quickFilter === 'all'"
-      (click)="setQuickFilter('all')"
-    >
-      All
-    </button>
+    <button class="qf-btn" [class.active]="quickFilter === 'all'" (click)="setQuickFilter('all')">All</button>
 
     @for (s of statuses; track s) {
-      <button
-        class="qf-btn"
-        [class.active]="quickFilter === s"
-        (click)="setQuickFilter(s)"
-      >
+      <button class="qf-btn" [class.active]="quickFilter === s" (click)="setQuickFilter(s)">
         {{ s }}
       </button>
     }
@@ -34,13 +22,7 @@
   <div class="filter-bar">
     <div class="filter-group">
       <div class="filter-label">Search</div>
-      <input
-        type="text"
-        class="search-input"
-        [(ngModel)]="filters.search"
-        (input)="applyFilters()"
-        placeholder="Search tasks..."
-      />
+      <input type="text" class="search-input" [(ngModel)]="filters.search" (input)="applyFilters()" placeholder="Search tasks..." />
     </div>
 
     <div class="filter-group">
@@ -60,12 +42,7 @@
 
     <div class="filter-group">
       <div class="filter-label">Module</div>
-      <input
-        type="text"
-        [(ngModel)]="filters.module"
-        (input)="applyFilters()"
-        placeholder="Module"
-      />
+      <input type="text" [(ngModel)]="filters.module" (input)="applyFilters()" placeholder="Module" />
     </div>
 
     <div class="filter-group">
@@ -98,9 +75,7 @@
       </select>
     </div>
 
-    <button class="btn btn-secondary btn-sm" (click)="clearFilters()">
-      ✕ Clear
-    </button>
+    <button class="btn btn-secondary btn-sm" (click)="clearFilters()">✕ Clear</button>
   </div>
 
   <div class="table-wrap">
@@ -109,7 +84,7 @@
       <button class="btn-icon ml-auto" (click)="loadTasks()">↻</button>
     </div>
 
-    <div style="overflow-x: auto">
+    <div style="overflow-x:auto">
       <table>
         <thead>
           <tr>
@@ -145,7 +120,7 @@
             @for (task of tasks; track task._id) {
               <tr [class.carried]="task.isCarriedForward">
                 <td class="td-date">
-                  {{ task.date | date: "dd-MM-yyyy" }}<br />
+                  {{ task.date | date:'dd-MM-yyyy' }}<br />
                   <span class="text-xs text-muted">{{ task.day }}</span>
 
                   @if (task.isCarriedForward) {
@@ -158,9 +133,7 @@
                   <div class="td-sub">by {{ task.createdBy }}</div>
 
                   @if ((task.reworkCount || 0) > 0) {
-                    <div class="rework-count">
-                      Rework: {{ task.reworkCount }}
-                    </div>
+                    <div class="rework-count">Rework: {{ task.reworkCount }}</div>
                   }
                 </td>
 
@@ -190,24 +163,14 @@
                 </td>
 
                 <td>
-                  @if (task.status === "Testing") {
+                  @if (task.status === 'Testing') {
                     <div class="td-actions">
-                      <button
-                        class="btn btn-primary btn-sm"
-                        (click)="markTestResult(task, true)"
-                      >
-                        Pass
-                      </button>
-                      <button
-                        class="btn btn-danger btn-sm"
-                        (click)="markTestResult(task, false)"
-                      >
-                        Fail
-                      </button>
+                      <button class="btn btn-primary btn-sm" (click)="markTestResult(task, true)">Pass</button>
+                      <button class="btn btn-danger btn-sm" (click)="markTestResult(task, false)">Fail</button>
                     </div>
                   } @else {
                     <div class="text-xs text-muted">
-                      {{ task.testRemarks || "—" }}
+                      {{ task.testRemarks || '—' }}
                     </div>
                   }
                 </td>
@@ -232,33 +195,22 @@
                 </td>
 
                 <td class="remarks-cell">
-                  {{ task.remarks || "—" }}
+                  {{ task.remarks || '—' }}
                 </td>
 
                 <td>
                   @if (auth.canModifyTasks()) {
                     <div class="td-actions">
-                      <select
-                        class="mini-select"
-                        [ngModel]="task.status"
-                        (ngModelChange)="updateStatus(task, $event)"
-                      >
+                      <select class="mini-select" [ngModel]="task.status" (ngModelChange)="updateStatus(task, $event)">
                         @for (s of statuses; track s) {
                           <option [value]="s">{{ s }}</option>
                         }
                       </select>
 
-                      <button class="btn-icon" (click)="openEditTask(task)">
-                        ✏️
-                      </button>
+                      <button class="btn-icon" (click)="openEditTask(task)">✏️</button>
 
                       @if (auth.isAdmin()) {
-                        <button
-                          class="btn-icon danger"
-                          (click)="deleteTask(task)"
-                        >
-                          🗑
-                        </button>
+                        <button class="btn-icon danger" (click)="deleteTask(task)">🗑</button>
                       }
                     </div>
                   } @else {
@@ -285,40 +237,32 @@
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">
-          {{ editId ? "Edit Task" : "Add Task" }}
+          {{ editId ? 'Edit Task' : 'Add Task' }}
         </div>
 
-        <button class="btn-icon" (click)="showModal = false">✕</button>
+        <button class="btn-icon" (click)="closeTaskModal()" [disabled]="saving">✕</button>
       </div>
 
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-group">
             <label>Date <span class="req">*</span></label>
-            <input type="date" [(ngModel)]="form.date" />
+            <input type="date" [(ngModel)]="form.date" [disabled]="saving" />
           </div>
 
           <div class="form-group">
             <label>Module <span class="req">*</span></label>
-            <input
-              type="text"
-              [(ngModel)]="form.module"
-              placeholder="e.g. Procurement"
-            />
+            <input type="text" [(ngModel)]="form.module" placeholder="e.g. Procurement" [disabled]="saving" />
           </div>
 
           <div class="form-group">
             <label>Page <span class="req">*</span></label>
-            <input
-              type="text"
-              [(ngModel)]="form.page"
-              placeholder="e.g. Purchase Order Page"
-            />
+            <input type="text" [(ngModel)]="form.page" placeholder="e.g. Purchase Order Page" [disabled]="saving" />
           </div>
 
           <div class="form-group">
             <label>Assigned Person <span class="req">*</span></label>
-            <select [(ngModel)]="form.person">
+            <select [(ngModel)]="form.person" [disabled]="saving">
               @for (p of persons; track p) {
                 <option [value]="p">{{ p }}</option>
               }
@@ -327,15 +271,12 @@
 
           <div class="form-group full">
             <label>Description <span class="req">*</span></label>
-            <textarea
-              [(ngModel)]="form.description"
-              placeholder="Describe the task..."
-            ></textarea>
+            <textarea [(ngModel)]="form.description" placeholder="Describe the task..." [disabled]="saving"></textarea>
           </div>
 
           <div class="form-group">
             <label>Working Type</label>
-            <select [(ngModel)]="form.workingType">
+            <select [(ngModel)]="form.workingType" [disabled]="saving">
               @for (t of workingTypes; track t) {
                 <option [value]="t">{{ t }}</option>
               }
@@ -344,7 +285,7 @@
 
           <div class="form-group">
             <label>Status</label>
-            <select [(ngModel)]="form.status">
+            <select [(ngModel)]="form.status" [disabled]="saving">
               @for (s of statuses; track s) {
                 <option [value]="s">{{ s }}</option>
               }
@@ -353,7 +294,7 @@
 
           <div class="form-group">
             <label>Priority</label>
-            <select [(ngModel)]="form.priority">
+            <select [(ngModel)]="form.priority" [disabled]="saving">
               @for (p of priorities; track p) {
                 <option [value]="p">{{ p }}</option>
               }
@@ -368,6 +309,7 @@
               multiple
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
               (change)="onFilesSelected($event)"
+              [disabled]="saving"
             />
 
             @if (selectedFiles.length) {
@@ -375,13 +317,7 @@
                 @for (file of selectedFiles; track file.name; let i = $index) {
                   <div class="selected-file">
                     📎 {{ file.name }}
-                    <button
-                      type="button"
-                      class="remove-file"
-                      (click)="removeSelectedFile(i)"
-                    >
-                      ✕
-                    </button>
+                    <button type="button" class="remove-file" (click)="removeSelectedFile(i)" [disabled]="saving">✕</button>
                   </div>
                 }
               </div>
@@ -401,31 +337,14 @@
                       📎 {{ file.originalName }}
                     </a>
 
-                    <div class="attachment-actions">
-                      <a
-                        class="btn btn-secondary btn-sm"
-                        [href]="getAttachmentUrl(file.filePath)"
-                        target="_blank"
-                      >
-                        Preview
-                      </a>
-
-                      <a
-                        class="btn btn-primary btn-sm"
-                        [href]="getAttachmentUrl(file.filePath)"
-                        [download]="file.originalName"
-                      >
-                        Download
-                      </a>
-
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm"
-                        (click)="deleteSavedAttachment(file.fileName)"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      (click)="deleteSavedAttachment(file.fileName)"
+                      [disabled]="saving"
+                    >
+                      Delete
+                    </button>
                   </div>
                 }
               </div>
@@ -434,19 +353,58 @@
 
           <div class="form-group full">
             <label>Remarks</label>
-            <textarea
-              [(ngModel)]="form.remarks"
-              placeholder="Optional notes, API status, blockers..."
-            ></textarea>
+            <textarea [(ngModel)]="form.remarks" placeholder="Optional notes, API status, blockers..." [disabled]="saving"></textarea>
           </div>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="showModal = false">
-          Cancel
+        <button class="btn btn-secondary" (click)="closeTaskModal()" [disabled]="saving">Cancel</button>
+
+        <button class="btn btn-primary" (click)="saveTask()" [disabled]="saving">
+          @if (saving) {
+            <span class="spinner"></span>
+            Saving...
+          } @else {
+            Save Task
+          }
         </button>
-        <button class="btn btn-primary" (click)="saveTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showRemarkModal) {
+  <div class="modal-overlay">
+    <div class="modal remark-modal">
+      <div class="modal-header">
+        <div class="modal-title">{{ remarkTitle }}</div>
+        <button class="btn-icon" (click)="closeRemarkModal()" [disabled]="remarkSaving">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group full">
+          <label>Remark</label>
+          <textarea
+            [(ngModel)]="remarkText"
+            [placeholder]="remarkPlaceholder"
+            [disabled]="remarkSaving"
+            autofocus
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeRemarkModal()" [disabled]="remarkSaving">Cancel</button>
+
+        <button class="btn btn-primary" (click)="confirmRemark()" [disabled]="remarkSaving">
+          @if (remarkSaving) {
+            <span class="spinner"></span>
+            Updating...
+          } @else {
+            Confirm
+          }
+        </button>
       </div>
     </div>
   </div>
