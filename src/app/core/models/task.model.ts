@@ -33,7 +33,10 @@ export interface Task {
   person: string;
   priority: Priority;
   remarks?: string;
-
+deadlineDate?: string;
+deadlineTime?: string;
+deadlineAt?: string;
+estimatedHours?: number;
   testedBy?: string;
   testRemarks?: string;
   reworkCount?: number;
@@ -58,6 +61,9 @@ export interface TaskPayload {
   priority: Priority;
   remarks?: string;
   changeRemark?: string;
+  deadlineDate?: string;
+deadlineTime?: string;
+estimatedHours?: number;
 }
 
 export interface ApiResponse<T> {

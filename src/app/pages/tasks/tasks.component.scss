@@ -196,3 +196,86 @@ button:disabled {
 .remark-modal textarea {
   min-height: 110px;
 }
+
+.deadline-pill {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.deadline-none {
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--text3);
+}
+
+.deadline-safe {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--done);
+}
+
+.deadline-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--pending);
+}
+
+.deadline-overdue {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--backend);
+}
+
+.deadline-done {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--working);
+}
+#topbar {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* 🔔 button */
+.top-icon-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.top-icon-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* 🔴 badge */
+.top-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--backend);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

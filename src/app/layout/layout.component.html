@@ -1,41 +1,77 @@
 <div id="sidebar">
-  <div class="sidebar-logo">Work<span>Track</span><small>v1.0 — Internal Tool</small></div>
+  <div class="sidebar-logo">
+    Work<span>Track</span><small>v1.0 — Internal Tool</small>
+  </div>
 
   <div class="nav-section">
     <div class="nav-label">Main</div>
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item"><span class="icon">📊</span> Dashboard</a>
-    <a routerLink="/tasks" routerLinkActive="active" class="nav-item"><span class="icon">📋</span> All Tasks</a>
-    <a routerLink="/today" routerLinkActive="active" class="nav-item"><span class="icon">📅</span> Today's Work</a>
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item"
+      ><span class="icon">📊</span> Dashboard</a
+    >
+    <a routerLink="/tasks" routerLinkActive="active" class="nav-item"
+      ><span class="icon">📋</span> All Tasks</a
+    >
+    <a routerLink="/today" routerLinkActive="active" class="nav-item"
+      ><span class="icon">📅</span> Today's Work</a
+    >
   </div>
 
   <div class="nav-section">
     <div class="nav-label">Tracking</div>
-    <a routerLink="/pending" routerLinkActive="active" class="nav-item"><span class="icon">⏳</span> Pending Tasks</a>
-    <a routerLink="/done" routerLinkActive="active" class="nav-item"><span class="icon">✅</span> Done Tasks</a>
-    <a routerLink="/backend-needed" routerLinkActive="active" class="nav-item"><span class="icon">🔴</span> Backend Needed</a>
-    <a routerLink="/my-tasks" routerLinkActive="active" class="nav-item"><span class="icon">👤</span> My Tasks</a>
+    <a routerLink="/my-tasks" routerLinkActive="active" class="nav-item"
+      ><span class="icon">👤</span> My Tasks</a
+    >
+    <a routerLink="/pending" routerLinkActive="active" class="nav-item"
+      ><span class="icon">⏳</span> Pending Tasks</a
+    >
+    <a routerLink="/done" routerLinkActive="active" class="nav-item"
+      ><span class="icon">✅</span> Done Tasks</a
+    >
+    <a routerLink="/backend-needed" routerLinkActive="active" class="nav-item"
+      ><span class="icon">🔴</span> Backend Needed</a
+    >
   </div>
 
   <div class="nav-section">
     <div class="nav-label">Insights</div>
-    <a routerLink="/history" routerLinkActive="active" class="nav-item"><span class="icon">📜</span> History Log</a>
-    <a routerLink="/reports" routerLinkActive="active" class="nav-item"><span class="icon">📈</span> Reports</a>
+    <a routerLink="/bugs" routerLinkActive="active" class="nav-item">
+      <span class="icon">🐞</span> Bugs
+    </a>
+
+    <a routerLink="/notifications" routerLinkActive="active" class="nav-item">
+      <span class="icon">🔔</span> Notifications
+    </a>
+    <a routerLink="/history" routerLinkActive="active" class="nav-item"
+      ><span class="icon">📜</span> History Log</a
+    >
+    <a routerLink="/reports" routerLinkActive="active" class="nav-item"
+      ><span class="icon">📈</span> Reports</a
+    >
   </div>
 
   @if (auth.isAdmin()) {
     <div class="nav-section">
       <div class="nav-label">Admin</div>
-      <a routerLink="/users" routerLinkActive="active" class="nav-item"><span class="icon">👥</span> Users</a>
+      <a routerLink="/users" routerLinkActive="active" class="nav-item"
+        ><span class="icon">👥</span> Users</a
+      >
     </div>
   }
 
   <div class="sidebar-user">
-    <div class="user-avatar">{{ user()?.name?.charAt(0) || 'U' }}</div>
+    <div class="user-avatar">{{ user()?.name?.charAt(0) || "U" }}</div>
     <div>
       <div class="user-name">{{ user()?.name }}</div>
       <div class="user-role">{{ user()?.role }}</div>
     </div>
-    <button class="btn-icon" style="margin-left:auto" (click)="logout()" title="Logout">⎋</button>
+    <button
+      class="btn-icon"
+      style="margin-left: auto"
+      (click)="logout()"
+      title="Logout"
+    >
+      ⎋
+    </button>
   </div>
 </div>
 

@@ -2,7 +2,12 @@ import { Injectable } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable, share } from "rxjs";
 import { environment } from "../../../environments/environment";
-import { ApiResponse, Task, TaskPayload, TaskStatus } from "../models/task.model";
+import {
+  ApiResponse,
+  Task,
+  TaskPayload,
+  TaskStatus,
+} from "../models/task.model";
 
 @Injectable({ providedIn: "root" })
 export class TaskService {
@@ -18,41 +23,58 @@ export class TaskService {
         params = params.set(key, String(value));
       }
     });
-    return this.dedupe(`tasks:${params.toString()}`,
-      this.http.get<ApiResponse<Task[]>>(this.api, { params })
+    return this.dedupe(
+      `tasks:${params.toString()}`,
+      this.http.get<ApiResponse<Task[]>>(this.api, { params }),
     );
   }
 
   getTodayTasks() {
-    return this.dedupe('tasks:today',
-      this.http.get<ApiResponse<Task[]>>(`${this.api}/today`)
+    return this.dedupe(
+      "tasks:today",
+      this.http.get<ApiResponse<Task[]>>(`${this.api}/today`),
     );
   }
 
   getMyTasks() {
-    return this.dedupe('tasks:my',
-      this.http.get<ApiResponse<Task[]>>(`${this.api}/my-tasks`)
+    return this.dedupe(
+      "tasks:my",
+      this.http.get<ApiResponse<Task[]>>(`${this.api}/my-tasks`),
     );
   }
 
   createTask(data: TaskPayload, files: File[] = []) {
-    return this.http.post<ApiResponse<Task>>(this.api, this.buildFormData(data, files));
+    return this.http.post<ApiResponse<Task>>(
+      this.api,
+      this.buildFormData(data, files),
+    );
   }
 
   updateTask(id: string, data: TaskPayload, files: File[] = []) {
-    return this.http.put<ApiResponse<Task>>(`${this.api}/${id}`, this.buildFormData(data, files));
+    return this.http.put<ApiResponse<Task>>(
+      `${this.api}/${id}`,
+      this.buildFormData(data, files),
+    );
   }
 
   updateStatus(id: string, status: TaskStatus, remark = "") {
-    return this.http.patch<ApiResponse<Task>>(`${this.api}/${id}/status`, { status, remark });
+    return this.http.patch<ApiResponse<Task>>(`${this.api}/${id}/status`, {
+      status,
+      remark,
+    });
   }
 
   updateTestResult(id: string, passed: boolean, remark = "") {
-    return this.http.patch<ApiResponse<Task>>(`${this.api}/${id}/test-result`, { passed, remark });
+    return this.http.patch<ApiResponse<Task>>(`${this.api}/${id}/test-result`, {
+      passed,
+      remark,
+    });
   }
 
   deleteAttachment(taskId: string, fileName: string) {
-    return this.http.delete<ApiResponse<Task>>(`${this.api}/${taskId}/attachments/${fileName}`);
+    return this.http.delete<ApiResponse<Task>>(
+      `${this.api}/${taskId}/attachments/${fileName}`,
+    );
   }
 
   deleteTask(id: string) {
@@ -64,7 +86,10 @@ export class TaskService {
     if (this.inflight.has(key)) return this.inflight.get(key)!;
     const shared$ = request$.pipe(share());
     this.inflight.set(key, shared$);
-    shared$.subscribe({ complete: () => this.inflight.delete(key), error: () => this.inflight.delete(key) });
+    shared$.subscribe({
+      complete: () => this.inflight.delete(key),
+      error: () => this.inflight.delete(key),
+    });
     return shared$;
   }
 
@@ -79,8 +104,12 @@ export class TaskService {
     formData.append("person", data.person);
     formData.append("priority", data.priority);
     formData.append("remarks", data.remarks || "");
+    formData.append("deadlineDate", data.deadlineDate || "");
+    formData.append("deadlineTime", data.deadlineTime || "");
+    formData.append("estimatedHours", String(data.estimatedHours || 0));
     if (data.changeRemark) formData.append("changeRemark", data.changeRemark);
     files.forEach((file) => formData.append("attachments", file));
+
     return formData;
   }
 }

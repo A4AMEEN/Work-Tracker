@@ -1,15 +1,35 @@
 <div id="topbar">
   <h1>{{ title }}</h1>
 
-  @if (auth.canModifyTasks()) {
-    <button class="btn btn-primary" (click)="openAddTask()">+ Add Task</button>
-  }
+  <div class="topbar-actions">
 
-  <button class="btn btn-secondary btn-sm" (click)="exportCSV()">
-    ⬇ Export CSV
-  </button>
+    <!-- 🔔 Notification -->
+    <button
+      class="top-icon-btn"
+      (click)="goToNotifications()"
+      title="Notifications"
+    >
+      🔔
+
+      @if ((notificationService.unreadCount$ | async) || 0; as count) {
+        @if (count > 0) {
+          <span class="top-badge">{{ count }}</span>
+        }
+      }
+    </button>
+
+    @if (auth.canModifyTasks()) {
+      <button class="btn btn-primary" (click)="openAddTask()">
+        + Add Task
+      </button>
+    }
+
+    <button class="btn btn-secondary btn-sm" (click)="exportCSV()">
+      ⬇ Export CSV
+    </button>
+
+  </div>
 </div>
-
 <div id="content" style="overflow-y: auto; height: 100%">
   <div class="quick-filters">
     <button
@@ -121,6 +141,7 @@
             <th>Status</th>
             <th>Priority</th>
             <th>Person</th>
+            <th>Deadline</th>
             <th>Attachments</th>
             <th>Actions</th>
           </tr>
@@ -171,6 +192,18 @@
               </td>
 
               <td>
+                <span class="deadline-pill" [class]="getDeadlineClass(task)">
+                  {{ getDeadlineText(task) }}
+                </span>
+
+                @if (task.deadlineDate && task.deadlineTime) {
+                  <div class="text-xs text-muted">
+                    {{ task.deadlineDate }} {{ task.deadlineTime }}
+                  </div>
+                }
+              </td>
+
+              <td>
                 @if (task.attachments?.length) {
                   <div class="attachment-list compact">
                     @for (file of task.attachments; track file.fileName) {
@@ -193,6 +226,11 @@
                 <div class="td-actions">
                   <button class="btn-icon" (click)="openEditTask(task)">
                     ✏️
+                  </button>
+                </div>
+                <div class="td-actions">
+                  <button class="btn-icon" (click)="deleteTask(task)">
+                    🗑️
                   </button>
                 </div>
               </td>
@@ -295,6 +333,34 @@
                 <option [value]="p">{{ p }}</option>
               }
             </select>
+          </div>
+          <div class="form-group">
+            <label>Deadline Date</label>
+            <input
+              type="date"
+              [(ngModel)]="form.deadlineDate"
+              [disabled]="saving"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Deadline Time</label>
+            <input
+              type="time"
+              [(ngModel)]="form.deadlineTime"
+              [disabled]="saving"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Estimated Hours</label>
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              [(ngModel)]="form.estimatedHours"
+              [disabled]="saving"
+            />
           </div>
 
           <div class="form-group full">

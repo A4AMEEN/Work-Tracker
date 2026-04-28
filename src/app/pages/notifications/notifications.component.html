@@ -1,0 +1,90 @@
+<div id="topbar">
+  <h1>Notifications</h1>
+
+  <button class="btn btn-secondary btn-sm" (click)="loadNotifications()">↻ Refresh</button>
+
+  <button class="btn btn-primary btn-sm" (click)="markAllRead()" [disabled]="unreadCount === 0">
+    Mark All Read
+  </button>
+</div>
+
+<div id="content" style="overflow-y:auto; height:100%;">
+  <div class="notification-toolbar">
+    <div class="filter-group">
+      <div class="filter-label">Search</div>
+      <input
+        type="text"
+        [(ngModel)]="search"
+        (input)="applyFilters()"
+        placeholder="Search notifications..."
+      />
+    </div>
+
+    <button
+      class="btn btn-secondary btn-sm"
+      [class.active-filter]="unreadOnly"
+      (click)="toggleUnread()"
+    >
+      {{ unreadOnly ? 'Showing Unread' : 'Show Unread Only' }}
+    </button>
+
+    <div class="unread-summary">
+      Unread: <strong>{{ unreadCount }}</strong>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="empty-state">Loading notifications...</div>
+  } @else if (error) {
+    <div class="empty-state">{{ error }}</div>
+  } @else {
+    <div class="notification-list">
+      @for (n of filtered; track n._id) {
+        <div class="notification-card" [class.unread]="!n.isRead">
+          <div class="notification-icon" [class]="typeClass(n.type)">
+            {{ icon(n.type) }}
+          </div>
+
+          <div class="notification-body" (click)="openTarget(n)">
+            <div class="notification-title-row">
+              <strong>{{ n.title }}</strong>
+
+              @if (!n.isRead) {
+                <span class="unread-dot"></span>
+              }
+            </div>
+
+            <div class="notification-message">
+              {{ n.message }}
+            </div>
+
+            <div class="notification-meta">
+              <span>{{ n.type }}</span>
+              <span>•</span>
+              <span>{{ n.createdAt | date:'dd-MM-yyyy hh:mm a' }}</span>
+
+              @if (n.createdBy) {
+                <span>•</span>
+                <span>By {{ n.createdBy }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="notification-actions">
+            @if (!n.isRead) {
+              <button class="btn btn-secondary btn-sm" (click)="markRead(n)">
+                Read
+              </button>
+            }
+
+            <button class="btn-icon danger" (click)="deleteNotification(n)">
+              🗑
+            </button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">No notifications found</div>
+      }
+    </div>
+  }
+</div>

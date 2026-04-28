@@ -1,0 +1,312 @@
+<div id="topbar">
+  <h1>Bugs</h1>
+
+  @if (auth.canModifyTasks()) {
+    <button class="btn btn-primary" (click)="openAddBug()">+ Report Bug</button>
+  }
+</div>
+
+<div id="content" style="overflow-y:auto; height:100%;">
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Search</div>
+      <input
+        type="text"
+        class="search-input"
+        [(ngModel)]="filters.search"
+        (input)="applyFilters()"
+        placeholder="Search bugs..."
+      />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Status</div>
+      <select [(ngModel)]="filters.status" (change)="applyFilters()">
+        <option value="">All</option>
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Severity</div>
+      <select [(ngModel)]="filters.severity" (change)="applyFilters()">
+        <option value="">All</option>
+        @for (s of severities; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Assigned To</div>
+      <select [(ngModel)]="filters.assignedTo" (change)="applyFilters()">
+        <option value="">All</option>
+        @for (p of persons; track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Module</div>
+      <input
+        type="text"
+        [(ngModel)]="filters.module"
+        (input)="applyFilters()"
+        placeholder="Module"
+      />
+    </div>
+
+    <button class="btn btn-secondary btn-sm" (click)="clearFilters()">✕ Clear</button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-count">{{ filteredBugs.length }} bugs</span>
+      <button class="btn-icon ml-auto" (click)="loadBugs()">↻</button>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Bug</th>
+            <th>Module</th>
+            <th>Page</th>
+            <th>Severity</th>
+            <th>Status</th>
+            <th>Assigned</th>
+            <th>Reported By</th>
+            <th>Attachments</th>
+            <th>Task</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (loading) {
+            <tr>
+              <td colspan="10">
+                <div class="empty-state">Loading bugs...</div>
+              </td>
+            </tr>
+          } @else if (error) {
+            <tr>
+              <td colspan="10">
+                <div class="empty-state">{{ error }}</div>
+              </td>
+            </tr>
+          } @else {
+            @for (bug of filteredBugs; track bug._id) {
+              <tr>
+                <td class="td-desc">
+                  <strong class="bug-title" [title]="bug.title">{{ bug.title }}</strong>
+                  <div class="td-sub" [title]="bug.description">
+                    {{ bug.description }}
+                  </div>
+                </td>
+
+                <td>{{ bug.module || '—' }}</td>
+                <td>{{ bug.page || '—' }}</td>
+
+                <td>
+                  <span class="bug-pill" [class]="severityClass(bug.severity)">
+                    {{ bug.severity }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge badge-{{ badgeClass(bug.status) }}">
+                    {{ bug.status }}
+                  </span>
+                </td>
+
+                <td>
+                  <strong>{{ bug.assignedTo || '—' }}</strong>
+                </td>
+
+                <td>{{ bug.reportedBy }}</td>
+
+                <td>
+                  @if (bug.attachments?.length) {
+                    <div class="attachment-list compact">
+                      @for (file of bug.attachments; track file.fileName) {
+                        <a
+                          class="attachment-link"
+                          [href]="getAttachmentUrl(file.filePath)"
+                          target="_blank"
+                          [title]="file.originalName"
+                        >
+                          📎 {{ file.originalName }}
+                        </a>
+                      }
+                    </div>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+
+                <td>
+                  @if (bug.linkedTaskId) {
+                    <span class="bug-linked">Task Created</span>
+                  } @else {
+                    <button class="btn btn-secondary btn-sm" (click)="convertBugToTask(bug)">
+                      Make Task
+                    </button>
+                  }
+                </td>
+
+                <td>
+                  <div class="td-actions">
+                    <select
+                      class="mini-select"
+                      [ngModel]="bug.status"
+                      (ngModelChange)="updateStatus(bug, $event)"
+                    >
+                      @for (s of statuses; track s) {
+                        <option [value]="s">{{ s }}</option>
+                      }
+                    </select>
+
+                    <button class="btn-icon" (click)="openEditBug(bug)">✏️</button>
+
+                    @if (auth.isAdmin()) {
+                      <button class="btn-icon danger" (click)="deleteBug(bug)">🗑</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="10">
+                  <div class="empty-state">No bugs found</div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showModal) {
+  <div class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          {{ editId ? 'Edit Bug' : 'Report Bug' }}
+        </div>
+
+        <button class="btn-icon" (click)="closeModal()" [disabled]="saving">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Bug Title <span class="req">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="form.title"
+              placeholder="Short bug title..."
+              [disabled]="saving"
+            />
+          </div>
+
+          <div class="form-group full">
+            <label>Description <span class="req">*</span></label>
+            <textarea
+              [(ngModel)]="form.description"
+              placeholder="Explain what is wrong, steps to reproduce, expected result..."
+              [disabled]="saving"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Module</label>
+            <input type="text" [(ngModel)]="form.module" [disabled]="saving" />
+          </div>
+
+          <div class="form-group">
+            <label>Page</label>
+            <input type="text" [(ngModel)]="form.page" [disabled]="saving" />
+          </div>
+
+          <div class="form-group">
+            <label>Severity</label>
+            <select [(ngModel)]="form.severity" [disabled]="saving">
+              @for (s of severities; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Status</label>
+            <select [(ngModel)]="form.status" [disabled]="saving">
+              @for (s of statuses; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Assign To</label>
+            <select [(ngModel)]="form.assignedTo" [disabled]="saving">
+              <option value="">Unassigned</option>
+              @for (p of persons; track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label>Attachments</label>
+            <input
+              type="file"
+              multiple
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+              (change)="onFilesSelected($event)"
+              [disabled]="saving"
+            />
+
+            @if (selectedFiles.length) {
+              <div class="selected-files">
+                @for (file of selectedFiles; track file.name; let i = $index) {
+                  <div class="selected-file">
+                    📎 {{ file.name }}
+                    <button type="button" class="remove-file" (click)="removeSelectedFile(i)">✕</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-group full">
+            <label>Remarks</label>
+            <textarea
+              [(ngModel)]="form.remarks"
+              placeholder="Optional remarks..."
+              [disabled]="saving"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()" [disabled]="saving">Cancel</button>
+
+        <button class="btn btn-primary" (click)="saveBug()" [disabled]="saving">
+          @if (saving) {
+            <span class="spinner"></span>
+            Saving...
+          } @else {
+            Save Bug
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
