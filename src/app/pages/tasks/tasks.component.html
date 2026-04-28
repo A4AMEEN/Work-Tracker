@@ -221,19 +221,17 @@
                   <span class="text-muted">—</span>
                 }
               </td>
+<td>
+  <div class="td-actions">
+    <button class="btn-icon" (click)="openEditTask(task)">
+      ✏️
+    </button>
 
-              <td>
-                <div class="td-actions">
-                  <button class="btn-icon" (click)="openEditTask(task)">
-                    ✏️
-                  </button>
-                </div>
-                <div class="td-actions">
-                  <button class="btn-icon" (click)="deleteTask(task)">
-                    🗑️
-                  </button>
-                </div>
-              </td>
+    <button class="btn-icon danger" (click)="deleteTask(task)">
+      🗑️
+    </button>
+  </div>
+</td>
             </tr>
           }
         </tbody>

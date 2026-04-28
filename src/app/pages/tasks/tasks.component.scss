@@ -279,3 +279,14 @@ button:disabled {
   align-items: center;
   justify-content: center;
 }
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+}
+
+.btn-icon.danger {
+  color: var(--backend);
+}
