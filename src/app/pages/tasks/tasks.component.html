@@ -176,10 +176,42 @@
               </td>
 
               <td>
-                <span class="badge badge-{{ badgeClass(task.status) }}">
-                  {{ task.status }}
-                </span>
-              </td>
+  @if (view === 'my') {
+    @if (editingStatusTaskId === task._id) {
+
+      <select
+        class="mini-select"
+        [(ngModel)]="tempStatus"
+        (ngModelChange)="onStatusChange(task, $event)"
+      >
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+
+    } @else {
+
+      <div class="status-view">
+        <span class="badge badge-{{ badgeClass(task.status) }}">
+          {{ task.status }}
+        </span>
+
+        <button
+          class="status-edit-btn"
+          (click)="startStatusEdit(task)"
+          title="Edit Status"
+        >
+          ✏️
+        </button>
+      </div>
+
+    }
+  } @else {
+    <span class="badge badge-{{ badgeClass(task.status) }}">
+      {{ task.status }}
+    </span>
+  }
+</td>
 
               <td>
                 <span class="badge badge-{{ badgeClass(task.priority) }}">
@@ -305,6 +337,7 @@
               [disabled]="saving"
             ></textarea>
           </div>
+          
 
           <div class="form-group">
             <label>Working Type</label>

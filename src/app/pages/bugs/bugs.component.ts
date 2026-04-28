@@ -153,7 +153,8 @@ this.editingBugAttachments = bug.attachments || [];
       severity: bug.severity,
       status: bug.status,
       assignedTo: bug.assignedTo || '',
-      remarks: bug.remarks || ''
+      remarks: bug.remarks || '',
+      payload: bug.payload || '',
     };
 
     this.showModal = true;
@@ -247,6 +248,40 @@ this.editingBugAttachments = bug.attachments || [];
     });
   }
 
+  async pastePayload(): Promise<void> {
+  try {
+    const text = await navigator.clipboard.readText();
+    this.form.payload = text || '';
+  } catch {
+    alert('Clipboard access denied.');
+  }
+}
+
+formatPayload(): void {
+  try {
+    const parsed = JSON.parse(this.form.payload || '');
+    this.form.payload = JSON.stringify(parsed, null, 2);
+  } catch {
+    alert('Invalid JSON.');
+  }
+}
+
+copyPayload(): void {
+  navigator.clipboard.writeText(this.form.payload || '');
+}
+
+downloadPayload(): void {
+  const blob = new Blob([this.form.payload || ''], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'payload.txt';
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
 getAttachmentUrl(path: string): string {
   if (!path) return '';
 
@@ -265,6 +300,57 @@ getAttachmentUrl(path: string): string {
     return `sev-${severity.toLowerCase()}`;
   }
 
+  isTextFile(file: any): boolean {
+  return (
+    file?.mimeType?.startsWith('text/') ||
+    file?.originalName?.toLowerCase().endsWith('.txt')
+  );
+}
+
+openAttachment(file: any): void {
+  const url = this.getAttachmentUrl(file.filePath);
+
+  if (this.isTextFile(file)) {
+    fetch(url)
+      .then(res => res.text())
+      .then(text => {
+        const w = window.open('', '_blank');
+
+        if (w) {
+          w.document.write(`
+            <html>
+              <head>
+                <title>${file.originalName}</title>
+                <style>
+                  body {
+                    background: #0a0c10;
+                    color: #e8eaf0;
+                    font-family: monospace;
+                    padding: 24px;
+                    white-space: pre-wrap;
+                    line-height: 1.6;
+                  }
+                </style>
+              </head>
+              <body>${this.escapeHtml(text)}</body>
+            </html>
+          `);
+          w.document.close();
+        }
+      });
+
+    return;
+  }
+
+  window.open(url, '_blank');
+}
+
+escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
   private emptyForm(): BugPayload {
     return {
       title: '',
@@ -274,7 +360,8 @@ getAttachmentUrl(path: string): string {
       severity: 'Medium',
       status: 'Open',
       assignedTo: this.auth.currentUser()?.name || 'Ameen',
-      remarks: ''
+      remarks: '',
+      payload: ''
     };
   }
 }

@@ -290,3 +290,55 @@ button:disabled {
 .btn-icon.danger {
   color: var(--backend);
 }
+.status-view {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-edit-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+
+.status-edit-btn:hover {
+  border-color: var(--accent);
+}
+
+.inline-status-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-status {
+  color: var(--done);
+}
+.mini-select {
+  transition: 0.2s ease;
+}
+
+.mini-select:focus {
+  border-color: var(--accent);
+}
+.payload-box {
+  min-height: 140px;
+  font-family: monospace;
+  font-size: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.payload-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}

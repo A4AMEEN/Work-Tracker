@@ -6,7 +6,7 @@
   }
 </div>
 
-<div id="content" style="overflow-y:auto; height:100%;">
+<div id="content" style="overflow-y: auto; height: 100%">
   <div class="filter-bar">
     <div class="filter-group">
       <div class="filter-label">Search</div>
@@ -59,7 +59,9 @@
       />
     </div>
 
-    <button class="btn btn-secondary btn-sm" (click)="clearFilters()">✕ Clear</button>
+    <button class="btn btn-secondary btn-sm" (click)="clearFilters()">
+      ✕ Clear
+    </button>
   </div>
 
   <div class="table-wrap">
@@ -68,7 +70,7 @@
       <button class="btn-icon ml-auto" (click)="loadBugs()">↻</button>
     </div>
 
-    <div style="overflow-x:auto">
+    <div style="overflow-x: auto">
       <table>
         <thead>
           <tr>
@@ -102,14 +104,16 @@
             @for (bug of filteredBugs; track bug._id) {
               <tr>
                 <td class="td-desc">
-                  <strong class="bug-title" [title]="bug.title">{{ bug.title }}</strong>
+                  <strong class="bug-title" [title]="bug.title">{{
+                    bug.title
+                  }}</strong>
                   <div class="td-sub" [title]="bug.description">
                     {{ bug.description }}
                   </div>
                 </td>
 
-                <td>{{ bug.module || '—' }}</td>
-                <td>{{ bug.page || '—' }}</td>
+                <td>{{ bug.module || "—" }}</td>
+                <td>{{ bug.page || "—" }}</td>
 
                 <td>
                   <span class="bug-pill" [class]="severityClass(bug.severity)">
@@ -124,35 +128,51 @@
                 </td>
 
                 <td>
-                  <strong>{{ bug.assignedTo || '—' }}</strong>
+                  <strong>{{ bug.assignedTo || "—" }}</strong>
                 </td>
 
                 <td>{{ bug.reportedBy }}</td>
 
                 <td>
-                  @if (bug.attachments?.length) {
-                    <div class="attachment-list compact">
+                  <div class="attachment-list compact">
+                    @if (bug.payload) {
+                      <button
+                        type="button"
+                        class="attachment-link attachment-button payload-link"
+                        (click)="openEditBug(bug)"
+                        title="Open payload / error details"
+                      >
+                        🧾 Payload
+                      </button>
+                    }
+
+                    @if (bug.attachments?.length) {
                       @for (file of bug.attachments; track file.fileName) {
-                        <a
-                          class="attachment-link"
-                          [href]="getAttachmentUrl(file.filePath)"
-                          target="_blank"
+                        <button
+                          type="button"
+                          class="attachment-link attachment-button"
+                          (click)="openAttachment(file)"
                           [title]="file.originalName"
                         >
                           📎 {{ file.originalName }}
-                        </a>
+                        </button>
                       }
-                    </div>
-                  } @else {
-                    <span class="text-muted">—</span>
-                  }
+                    }
+
+                    @if (!bug.payload && !bug.attachments?.length) {
+                      <span class="text-muted">—</span>
+                    }
+                  </div>
                 </td>
 
                 <td>
                   @if (bug.linkedTaskId) {
                     <span class="bug-linked">Task Created</span>
                   } @else {
-                    <button class="btn btn-secondary btn-sm" (click)="convertBugToTask(bug)">
+                    <button
+                      class="btn btn-secondary btn-sm"
+                      (click)="convertBugToTask(bug)"
+                    >
                       Make Task
                     </button>
                   }
@@ -170,10 +190,14 @@
                       }
                     </select>
 
-                    <button class="btn-icon" (click)="openEditBug(bug)">✏️</button>
+                    <button class="btn-icon" (click)="openEditBug(bug)">
+                      ✏️
+                    </button>
 
                     @if (auth.isAdmin()) {
-                      <button class="btn-icon danger" (click)="deleteBug(bug)">🗑</button>
+                      <button class="btn-icon danger" (click)="deleteBug(bug)">
+                        🗑
+                      </button>
                     }
                   </div>
                 </td>
@@ -197,10 +221,12 @@
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">
-          {{ editId ? 'Edit Bug' : 'Report Bug' }}
+          {{ editId ? "Edit Bug" : "Report Bug" }}
         </div>
 
-        <button class="btn-icon" (click)="closeModal()" [disabled]="saving">✕</button>
+        <button class="btn-icon" (click)="closeModal()" [disabled]="saving">
+          ✕
+        </button>
       </div>
 
       <div class="modal-body">
@@ -223,7 +249,54 @@
               [disabled]="saving"
             ></textarea>
           </div>
+          <div class="form-group full">
+            <label>Payload / Error Details</label>
 
+            <textarea
+              [(ngModel)]="form.payload"
+              placeholder="Paste API payload / error / response here..."
+              class="payload-box"
+              [disabled]="saving"
+            ></textarea>
+
+            <div class="payload-actions">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="pastePayload()"
+                [disabled]="saving"
+              >
+                📋 Paste
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="formatPayload()"
+                [disabled]="saving"
+              >
+                🧹 Format JSON
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="copyPayload()"
+                [disabled]="saving"
+              >
+                📄 Copy
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="downloadPayload()"
+                [disabled]="saving"
+              >
+                ⬇ Download
+              </button>
+            </div>
+          </div>
           <div class="form-group">
             <label>Module</label>
             <input type="text" [(ngModel)]="form.module" [disabled]="saving" />
@@ -296,13 +369,14 @@
 
                 @for (file of editingBugAttachments; track file.fileName) {
                   <div class="saved-attachment">
-                    <a
-                      [href]="getAttachmentUrl(file.filePath)"
-                      target="_blank"
+                    <button
+                      type="button"
+                      class="attachment-link attachment-button"
+                      (click)="openAttachment(file)"
                       [title]="file.originalName"
                     >
                       📎 {{ file.originalName }}
-                    </a>
+                    </button>
 
                     <button
                       type="button"
@@ -330,7 +404,13 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="closeModal()" [disabled]="saving">Cancel</button>
+        <button
+          class="btn btn-secondary"
+          (click)="closeModal()"
+          [disabled]="saving"
+        >
+          Cancel
+        </button>
 
         <button class="btn btn-primary" (click)="saveBug()" [disabled]="saving">
           @if (saving) {

@@ -57,6 +57,7 @@ export class BugService {
     formData.append('status', data.status);
     formData.append('assignedTo', data.assignedTo || '');
     formData.append('remarks', data.remarks || '');
+    formData.append('payload', data.payload || '');
 
     files.forEach(file => formData.append('attachments', file));
 

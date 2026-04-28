@@ -64,6 +64,7 @@ export interface TaskPayload {
   deadlineDate?: string;
 deadlineTime?: string;
 estimatedHours?: number;
+payload?: any;
 }
 
 export interface ApiResponse<T> {

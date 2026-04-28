@@ -6,7 +6,7 @@ import { AuthService } from "../../core/services/auth.service";
 import { TaskService } from "../../core/services/task.service";
 import { CacheService } from "../../core/services/cache.service";
 import { NotificationService } from "../../core/services/notification.service";
-import { Router } from '@angular/router';
+import { Router } from "@angular/router";
 import {
   Priority,
   Task,
@@ -64,7 +64,8 @@ export class TasksComponent implements OnInit, OnDestroy {
     priority: "",
     workingType: "",
   };
-
+  editingStatusTaskId = "";
+  tempStatus: TaskStatus = "Pending";
   persons = ["Ansari", "Ameen", "Kaviya", "Rajeena", "Rohan"];
   statuses: TaskStatus[] = [
     "Pending",
@@ -89,7 +90,7 @@ export class TasksComponent implements OnInit, OnDestroy {
     private taskService: TaskService,
     private cache: CacheService,
     public notificationService: NotificationService,
-     private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -104,6 +105,11 @@ export class TasksComponent implements OnInit, OnDestroy {
         this.view = data["view"] || "all";
         this.title = data["title"] || "Tasks";
         this.resetFilters();
+
+        if (this.view === "today") {
+          this.filters.date = this.todayDate();
+        }
+
         this.loadTasks();
       }),
     );
@@ -212,6 +218,14 @@ export class TasksComponent implements OnInit, OnDestroy {
       result = result.filter((t) => t.status === status);
     }
 
+    if (this.view === "today") {
+      result = result.sort((a, b) => {
+        const aTime = new Date(a.deadlineAt || `${a.date}T00:00:00`).getTime();
+        const bTime = new Date(b.deadlineAt || `${b.date}T00:00:00`).getTime();
+        return aTime - bTime;
+      });
+    }
+
     this.tasks = result;
   }
 
@@ -263,6 +277,7 @@ export class TasksComponent implements OnInit, OnDestroy {
       deadlineDate: task.deadlineDate || "",
       deadlineTime: task.deadlineTime || "",
       estimatedHours: task.estimatedHours || 0,
+      payload: "",
     };
 
     this.showModal = true;
@@ -554,6 +569,97 @@ export class TasksComponent implements OnInit, OnDestroy {
     return "deadline-safe";
   }
 
+  startStatusEdit(task: Task): void {
+    this.editingStatusTaskId = task._id;
+    this.tempStatus = task.status;
+  }
+async pastePayload(): Promise<void> {
+  try {
+    const text = await navigator.clipboard.readText();
+    this.form.payload = text || '';
+  } catch {
+    alert('Clipboard access denied');
+  }
+}
+
+formatPayload(): void {
+  try {
+    const parsed = JSON.parse(this.form.payload);
+    this.form.payload = JSON.stringify(parsed, null, 2);
+  } catch {
+    alert('Invalid JSON');
+  }
+}
+
+copyPayload(): void {
+  navigator.clipboard.writeText(this.form.payload || '');
+}
+
+downloadPayload(): void {
+  const blob = new Blob([this.form.payload || ''], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'payload.txt';
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+  // cancelStatusEdit(): void {
+  //   this.editingStatusTaskId = "";
+  //   this.tempStatus = "Pending";
+  // }
+
+  // saveInlineStatus(task: Task): void {
+  //   if (task.status === this.tempStatus) {
+  //     this.cancelStatusEdit();
+  //     return;
+  //   }
+
+  //   this.taskService
+  //     .updateStatus(task._id, this.tempStatus, "Status updated from My Tasks")
+  //     .subscribe({
+  //       next: (res) => {
+  //         this.allTasks = this.allTasks.map((t) =>
+  //           t._id === task._id ? res.data : t,
+  //         );
+  //         this.cache.invalidatePrefix("tasks:");
+  //         this.applyClientFilters();
+  //         this.cancelStatusEdit();
+  //       },
+  //       error: (err) => alert(err?.error?.message || "Status update failed."),
+  //     });
+  // }
+
+  onStatusChange(task: Task, newStatus: TaskStatus): void {
+    if (task.status === newStatus) {
+      this.editingStatusTaskId = "";
+      return;
+    }
+
+    this.taskService
+      .updateStatus(task._id, newStatus, "Updated from My Tasks")
+      .subscribe({
+        next: (res) => {
+          this.allTasks = this.allTasks.map((t) =>
+            t._id === task._id ? res.data : t,
+          );
+
+          this.cache.invalidatePrefix("tasks:");
+          this.applyClientFilters();
+
+          this.editingStatusTaskId = "";
+        },
+        error: (err) => {
+          alert(err?.error?.message || "Status update failed.");
+          this.editingStatusTaskId = "";
+        },
+      });
+  }
+  private todayDate(): string {
+    return new Date().toISOString().split("T")[0];
+  }
   getDeadlineText(task: Task): string {
     if (!task.deadlineAt) return "No deadline";
     if (task.status === "Done" || task.status === "Test Done")

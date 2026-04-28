@@ -34,6 +34,7 @@ export interface Bug {
   remarks?: string;
   createdAt?: string;
   updatedAt?: string;
+  payload?: any;
 }
 
 export interface BugPayload {
@@ -45,6 +46,7 @@ export interface BugPayload {
   status: BugStatus;
   assignedTo: string;
   remarks?: string;
+  payload?: any;
 }
 
 export interface ApiResponse<T> {
