@@ -62,4 +62,11 @@ export class BugService {
 
     return formData;
   }
+
+  deleteAttachment(bugId: string, fileName: string) {
+  return this.http.delete<ApiResponse<Bug>>(
+    `${this.api}/${bugId}/attachments/${encodeURIComponent(fileName)}`
+  );
+}
+
 }

@@ -277,7 +277,41 @@
                 @for (file of selectedFiles; track file.name; let i = $index) {
                   <div class="selected-file">
                     📎 {{ file.name }}
-                    <button type="button" class="remove-file" (click)="removeSelectedFile(i)">✕</button>
+                    <button
+                      type="button"
+                      class="remove-file"
+                      (click)="removeSelectedFile(i)"
+                      [disabled]="saving"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (editingBugAttachments.length) {
+              <div class="saved-attachments">
+                <div class="saved-title">Saved Attachments</div>
+
+                @for (file of editingBugAttachments; track file.fileName) {
+                  <div class="saved-attachment">
+                    <a
+                      [href]="getAttachmentUrl(file.filePath)"
+                      target="_blank"
+                      [title]="file.originalName"
+                    >
+                      📎 {{ file.originalName }}
+                    </a>
+
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      (click)="deleteSavedAttachment(file.fileName)"
+                      [disabled]="saving"
+                    >
+                      Delete
+                    </button>
                   </div>
                 }
               </div>

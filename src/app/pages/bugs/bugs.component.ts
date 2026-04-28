@@ -25,7 +25,7 @@ export class BugsComponent implements OnInit {
 
   showModal = false;
   editId = '';
-
+editingBugAttachments: any[] = [];
   selectedFiles: File[] = [];
 
   persons = ['Ansari', 'Ameen', 'Kaviya', 'Rajeena', 'Rohan'];
@@ -123,12 +123,28 @@ export class BugsComponent implements OnInit {
     this.selectedFiles = [];
     this.form = this.emptyForm();
     this.showModal = true;
+    this.editingBugAttachments = [];
   }
+
+  deleteSavedAttachment(fileName: string): void {
+  if (!this.editId) return;
+  if (!confirm('Delete this attachment?')) return;
+
+  this.bugService.deleteAttachment(this.editId, fileName).subscribe({
+    next: (res) => {
+      this.editingBugAttachments = res.data.attachments || [];
+      this.bugs = this.bugs.map(b => b._id === this.editId ? res.data : b);
+      this.applyFilters();
+    },
+    error: (err) => alert(err?.error?.message || 'Attachment delete failed.')
+  });
+}
+
 
   openEditBug(bug: Bug): void {
     this.editId = bug._id;
     this.selectedFiles = [];
-
+this.editingBugAttachments = bug.attachments || [];
     this.form = {
       title: bug.title,
       description: bug.description,
@@ -231,15 +247,15 @@ export class BugsComponent implements OnInit {
     });
   }
 
-  getAttachmentUrl(path: string): string {
-    if (!path) return '';
+getAttachmentUrl(path: string): string {
+  if (!path) return '';
 
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-
-    return `${this.apiBase}${path}`;
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
   }
+
+  return `${this.apiBase}${path}`;
+}
 
   badgeClass(value: string): string {
     return value.toLowerCase().replace(/ /g, '-');
