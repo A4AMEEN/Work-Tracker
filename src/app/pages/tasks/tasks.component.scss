@@ -342,3 +342,10 @@ button:disabled {
   gap: 8px;
   margin-top: 6px;
 }
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}

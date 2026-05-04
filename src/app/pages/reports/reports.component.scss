@@ -16,3 +16,10 @@
   font-size: 13px;
   font-weight: 600;
 }
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
