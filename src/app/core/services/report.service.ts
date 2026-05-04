@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
-import { ApiResponse } from '../models/task.model';
+import { Injectable } from "@angular/core";
+import { HttpClient, HttpParams } from "@angular/common/http";
+import { environment } from "../../../environments/environment";
+import { ApiResponse } from "../models/task.model";
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class ReportService {
   constructor(private http: HttpClient) {}
 
@@ -14,12 +14,18 @@ export class ReportService {
       if (value) params = params.set(key, value);
     });
 
-    return this.http.get<ApiResponse<any>>(`${environment.apiUrl}/reports/summary`, { params });
+    return this.http.get<ApiResponse<any>>(
+      `${environment.apiUrl}/reports/summary`,
+      { params },
+    );
   }
 
-  getDailyReport(date: string) {
-    return this.http.get<ApiResponse<any>>(
-      `${environment.apiUrl}/reports/daily?date=${date}`
-    );
+  getDailyReport(date: string, mode: string = "taskDate") {
+    return this.http.get<any>(`${environment.apiUrl}/reports/daily`, {
+      params: {
+        date,
+        mode,
+      },
+    });
   }
 }

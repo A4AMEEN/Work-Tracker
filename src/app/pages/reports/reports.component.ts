@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../core/services/report.service';
 
+type ReportMode = 'taskDate' | 'completedOn' | 'both';
+
 @Component({
   selector: 'app-reports',
   standalone: true,
@@ -11,10 +13,20 @@ import { ReportService } from '../../core/services/report.service';
   styleUrl: './reports.component.scss'
 })
 export class ReportsComponent implements OnInit {
-  filters = { from: '', to: '', person: '', module: '', status: '' };
+  filters = {
+    from: '',
+    to: '',
+    person: '',
+    module: '',
+    status: '',
+    mode: 'taskDate' as ReportMode
+  };
+
   data: any;
   dailyReport: any;
+
   selectedDate = new Date().toISOString().split('T')[0];
+  dailyMode: ReportMode = 'taskDate';
 
   loading = false;
   reportCopied = false;
@@ -38,6 +50,16 @@ export class ReportsComponent implements OnInit {
     this.loadDailyReport();
   }
 
+  setDailyMode(mode: ReportMode): void {
+    this.dailyMode = mode;
+    this.loadDailyReport();
+  }
+
+  setSummaryMode(mode: ReportMode): void {
+    this.filters.mode = mode;
+    this.loadReport();
+  }
+
   loadReport(): void {
     this.loading = true;
 
@@ -51,7 +73,7 @@ export class ReportsComponent implements OnInit {
   }
 
   loadDailyReport(): void {
-    this.reportService.getDailyReport(this.selectedDate).subscribe({
+    this.reportService.getDailyReport(this.selectedDate, this.dailyMode).subscribe({
       next: (res) => {
         this.dailyReport = res.data;
       }
@@ -84,6 +106,7 @@ export class ReportsComponent implements OnInit {
       'status',
       'priority',
       'person',
+      'completedAt',
       'remarks',
       'testRemarks',
       'reworkCount'

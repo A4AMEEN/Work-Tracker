@@ -149,8 +149,15 @@ export class TasksComponent implements OnInit, OnDestroy {
     let request$;
 
     if (this.view === "today") {
-      request$ = this.taskService.getTodayTasks();
-    } else if (this.view === "my") {
+  if (this.filters.date && this.filters.date !== this.todayDate()) {
+    request$ = this.taskService.getTasks({
+      date: this.filters.date,
+      limit: 500
+    });
+  } else {
+    request$ = this.taskService.getTodayTasks();
+  }
+} else if (this.view === "my") {
       request$ = this.taskService.getMyTasks();
     } else {
       const apiFilters: any = { limit: 500 };
@@ -225,6 +232,31 @@ export class TasksComponent implements OnInit, OnDestroy {
         return aTime - bTime;
       });
     }
+    const statusRank: Record<string, number> = {
+      Pending: 1,
+      Rework: 2,
+      "Backend Needed": 3,
+      Working: 4,
+      Testing: 5,
+      "Test Done": 6,
+      Done: 7,
+    };
+
+    result = result.sort((a, b) => {
+      // My Tasks + Today: active tasks top, done bottom
+      if (this.view === "my" || this.view === "today") {
+        const statusDiff =
+          (statusRank[a.status] || 99) - (statusRank[b.status] || 99);
+        if (statusDiff !== 0) return statusDiff;
+
+        const aTime = new Date(a.deadlineAt || `${a.date}T00:00:00`).getTime();
+        const bTime = new Date(b.deadlineAt || `${b.date}T00:00:00`).getTime();
+        return aTime - bTime;
+      }
+
+      // All tasks: keep normal latest list
+      return 0;
+    });
 
     this.tasks = result;
   }
@@ -573,39 +605,39 @@ export class TasksComponent implements OnInit, OnDestroy {
     this.editingStatusTaskId = task._id;
     this.tempStatus = task.status;
   }
-async pastePayload(): Promise<void> {
-  try {
-    const text = await navigator.clipboard.readText();
-    this.form.payload = text || '';
-  } catch {
-    alert('Clipboard access denied');
+  async pastePayload(): Promise<void> {
+    try {
+      const text = await navigator.clipboard.readText();
+      this.form.payload = text || "";
+    } catch {
+      alert("Clipboard access denied");
+    }
   }
-}
 
-formatPayload(): void {
-  try {
-    const parsed = JSON.parse(this.form.payload);
-    this.form.payload = JSON.stringify(parsed, null, 2);
-  } catch {
-    alert('Invalid JSON');
+  formatPayload(): void {
+    try {
+      const parsed = JSON.parse(this.form.payload);
+      this.form.payload = JSON.stringify(parsed, null, 2);
+    } catch {
+      alert("Invalid JSON");
+    }
   }
-}
 
-copyPayload(): void {
-  navigator.clipboard.writeText(this.form.payload || '');
-}
+  copyPayload(): void {
+    navigator.clipboard.writeText(this.form.payload || "");
+  }
 
-downloadPayload(): void {
-  const blob = new Blob([this.form.payload || ''], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
+  downloadPayload(): void {
+    const blob = new Blob([this.form.payload || ""], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'payload.txt';
-  a.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "payload.txt";
+    a.click();
 
-  URL.revokeObjectURL(url);
-}
+    URL.revokeObjectURL(url);
+  }
   // cancelStatusEdit(): void {
   //   this.editingStatusTaskId = "";
   //   this.tempStatus = "Pending";
@@ -699,4 +731,22 @@ downloadPayload(): void {
       estimatedHours: 0,
     };
   }
+  canEditTaskStatus(task: Task): boolean {
+  const currentUser = this.auth.currentUser()?.name;
+
+  return (
+    this.auth.isAdmin() ||
+    task.person === currentUser ||
+    task.createdBy === currentUser
+  );
+}
+
+tryStartStatusEdit(task: Task): void {
+  if (!this.canEditTaskStatus(task)) {
+    alert("You can update only tasks assigned to you or created by you.");
+    return;
+  }
+
+  this.startStatusEdit(task);
+}
 }

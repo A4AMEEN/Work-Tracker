@@ -13,6 +13,36 @@
         <input type="date" [(ngModel)]="selectedDate" (change)="loadDailyReport()" />
       </div>
 
+      <div class="filter-group">
+        <div class="filter-label">Report Mode</div>
+
+        <div class="report-mode-group">
+          <button
+            class="rm-btn"
+            [class.active]="dailyMode === 'taskDate'"
+            (click)="setDailyMode('taskDate')"
+          >
+            📅 Task Date
+          </button>
+
+          <button
+            class="rm-btn"
+            [class.active]="dailyMode === 'completedOn'"
+            (click)="setDailyMode('completedOn')"
+          >
+            ✅ Completed On
+          </button>
+
+          <button
+            class="rm-btn"
+            [class.active]="dailyMode === 'both'"
+            (click)="setDailyMode('both')"
+          >
+            🔀 Both
+          </button>
+        </div>
+      </div>
+
       <button class="btn btn-primary btn-sm" (click)="copyDailyReport()">
         Copy WhatsApp Message
       </button>
@@ -38,6 +68,36 @@
     <div class="filter-group">
       <div class="filter-label">To</div>
       <input type="date" [(ngModel)]="filters.to" (change)="loadReport()" />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Report Mode</div>
+
+      <div class="report-mode-group">
+        <button
+          class="rm-btn"
+          [class.active]="filters.mode === 'taskDate'"
+          (click)="setSummaryMode('taskDate')"
+        >
+          📅 Task Date
+        </button>
+
+        <button
+          class="rm-btn"
+          [class.active]="filters.mode === 'completedOn'"
+          (click)="setSummaryMode('completedOn')"
+        >
+          ✅ Completed On
+        </button>
+
+        <button
+          class="rm-btn"
+          [class.active]="filters.mode === 'both'"
+          (click)="setSummaryMode('both')"
+        >
+          🔀 Both
+        </button>
+      </div>
     </div>
 
     <div class="filter-group">

@@ -2,7 +2,6 @@
   <h1>{{ title }}</h1>
 
   <div class="topbar-actions">
-
     <!-- 🔔 Notification -->
     <button
       class="top-icon-btn"
@@ -27,7 +26,6 @@
     <button class="btn btn-secondary btn-sm" (click)="exportCSV()">
       ⬇ Export CSV
     </button>
-
   </div>
 </div>
 <div id="content" style="overflow-y: auto; height: 100%">
@@ -65,8 +63,13 @@
 
     <div class="filter-group">
       <div class="filter-label">Date</div>
-      <input type="date" [(ngModel)]="filters.date" (change)="applyFilters()" />
+      <input
+        type="date"
+        [(ngModel)]="filters.date"
+        (change)="loadTasks(true)"
+      />
     </div>
+    
 
     <div class="filter-group">
       <div class="filter-label">Person</div>
@@ -176,42 +179,38 @@
               </td>
 
               <td>
-  @if (view === 'my') {
-    @if (editingStatusTaskId === task._id) {
+                @if (view === 'my' || view === 'today' || view === 'all') {
+                  @if (editingStatusTaskId === task._id) {
+                    <select
+                      class="mini-select"
+                      [(ngModel)]="tempStatus"
+                      (ngModelChange)="onStatusChange(task, $event)"
+                    >
+                      @for (s of statuses; track s) {
+                        <option [value]="s">{{ s }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <div class="status-view">
+                      <span class="badge badge-{{ badgeClass(task.status) }}">
+                        {{ task.status }}
+                      </span>
 
-      <select
-        class="mini-select"
-        [(ngModel)]="tempStatus"
-        (ngModelChange)="onStatusChange(task, $event)"
-      >
-        @for (s of statuses; track s) {
-          <option [value]="s">{{ s }}</option>
-        }
-      </select>
-
-    } @else {
-
-      <div class="status-view">
-        <span class="badge badge-{{ badgeClass(task.status) }}">
-          {{ task.status }}
-        </span>
-
-        <button
-          class="status-edit-btn"
-          (click)="startStatusEdit(task)"
-          title="Edit Status"
-        >
-          ✏️
-        </button>
-      </div>
-
-    }
-  } @else {
-    <span class="badge badge-{{ badgeClass(task.status) }}">
-      {{ task.status }}
-    </span>
-  }
-</td>
+                      <button
+                        class="status-edit-btn"
+                        (click)="tryStartStatusEdit(task)"
+                        title="Edit Status"
+                      >
+                        ✏️
+                      </button>
+                    </div>
+                  }
+                } @else {
+                  <span class="badge badge-{{ badgeClass(task.status) }}">
+                    {{ task.status }}
+                  </span>
+                }
+              </td>
 
               <td>
                 <span class="badge badge-{{ badgeClass(task.priority) }}">
@@ -253,17 +252,17 @@
                   <span class="text-muted">—</span>
                 }
               </td>
-<td>
-  <div class="td-actions">
-    <button class="btn-icon" (click)="openEditTask(task)">
-      ✏️
-    </button>
+              <td>
+                <div class="td-actions">
+                  <button class="btn-icon" (click)="openEditTask(task)">
+                    ✏️
+                  </button>
 
-    <button class="btn-icon danger" (click)="deleteTask(task)">
-      🗑️
-    </button>
-  </div>
-</td>
+                  <button class="btn-icon danger" (click)="deleteTask(task)">
+                    🗑️
+                  </button>
+                </div>
+              </td>
             </tr>
           }
         </tbody>
@@ -337,7 +336,6 @@
               [disabled]="saving"
             ></textarea>
           </div>
-          
 
           <div class="form-group">
             <label>Working Type</label>
