@@ -20,12 +20,15 @@ export class ReportService {
     );
   }
 
-  getDailyReport(date: string, mode: string = "taskDate") {
-    return this.http.get<any>(`${environment.apiUrl}/reports/daily`, {
-      params: {
-        date,
-        mode,
-      },
-    });
+getDailyReport(date: string, mode = 'taskDate', person = '') {
+  let params = new HttpParams()
+    .set('date', date)
+    .set('mode', mode);
+
+  if (person) {
+    params = params.set('person', person);
   }
+
+  return this.http.get<any>(`${environment.apiUrl}/reports/daily`, { params });
+}
 }

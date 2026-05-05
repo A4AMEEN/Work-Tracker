@@ -5,3 +5,39 @@
   min-height: 0;
   overflow: hidden;
 }
+.inline-input,
+.mini-select {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 10px;
+  outline: none;
+  min-width: 140px;
+}
+
+.inline-input:focus,
+.mini-select:focus {
+  border-color: var(--accent);
+}
+
+.td-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-admin {
+  background: rgba(124, 58, 237, 0.18);
+  color: #a855f7;
+}
+
+.badge-developer {
+  background: rgba(37, 99, 235, 0.18);
+  color: #60a5fa;
+}
+
+.badge-viewer {
+  background: rgba(107, 114, 128, 0.18);
+  color: #9ca3af;
+}

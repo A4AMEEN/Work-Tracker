@@ -90,3 +90,77 @@
   border-radius: var(--radius);
   padding: 16px;
 }
+.user-chip-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.user-chip {
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text2);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.user-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.user-dropdown-wrap {
+  position: relative;
+}
+
+.user-dropdown-btn {
+  min-width: 180px;
+  height: 38px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: 62px;
+  left: 0;
+  z-index: 50;
+  min-width: 210px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.35);
+}
+
+.user-check-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-check-item:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.user-check-item input {
+  accent-color: var(--accent);
+}

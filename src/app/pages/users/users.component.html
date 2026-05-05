@@ -23,15 +23,74 @@
       <tbody>
         @for (u of users; track u._id || u.id) {
           <tr>
-            <td><strong>{{ u.name }}</strong></td>
-            <td>{{ u.username }}</td>
-            <td><span class="badge badge-frontend">{{ u.role }}</span></td>
-            <td>{{ u.isActive ? 'Yes' : 'No' }}</td>
             <td>
-              <button class="btn btn-secondary btn-sm" (click)="toggleActive(u)">
-                {{ u.isActive ? 'Deactivate' : 'Activate' }}
-              </button>
-              <button class="btn btn-danger btn-sm" (click)="deleteUser(u)">Delete</button>
+              @if (editingUserId === (u._id || u.id)) {
+                <input
+                  class="inline-input"
+                  type="text"
+                  [(ngModel)]="editUserForm.name"
+                  placeholder="Name"
+                />
+              } @else {
+                <strong>{{ u.name }}</strong>
+              }
+            </td>
+
+            <td>{{ u.username }}</td>
+
+            <td>
+              @if (editingUserId === (u._id || u.id)) {
+                <select class="mini-select" [(ngModel)]="editUserForm.role">
+                  @for (r of roles; track r) {
+                    <option [value]="r">{{ r }}</option>
+                  }
+                </select>
+              } @else {
+                <span class="badge badge-{{ u.role.toLowerCase() }}">
+                  {{ u.role }}
+                </span>
+              }
+            </td>
+
+            <td>
+              @if (editingUserId === (u._id || u.id)) {
+                <select class="mini-select" [(ngModel)]="editUserForm.isActive">
+                  <option [ngValue]="true">Yes</option>
+                  <option [ngValue]="false">No</option>
+                </select>
+              } @else {
+                {{ u.isActive ? 'Yes' : 'No' }}
+              }
+            </td>
+
+            <td>
+              @if (editingUserId === (u._id || u.id)) {
+                <div class="td-actions">
+                  <button class="btn btn-primary btn-sm" (click)="saveEditUser(u)">
+                    Save
+                  </button>
+
+                  <button class="btn btn-secondary btn-sm" (click)="cancelEditUser()">
+                    Cancel
+                  </button>
+                </div>
+              } @else {
+                <div class="td-actions">
+                 @if (auth.isAdmin()) {
+  <button class="btn btn-secondary btn-sm" (click)="startEditUser(u)">
+    ✏️ Edit
+  </button>
+}
+
+                  <button class="btn btn-secondary btn-sm" (click)="toggleActive(u)">
+                    {{ u.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+
+                  <button class="btn btn-danger btn-sm" (click)="deleteUser(u)">
+                    Delete
+                  </button>
+                </div>
+              }
             </td>
           </tr>
         }
@@ -49,13 +108,27 @@
       </div>
 
       <div class="modal-body">
-        <div class="form-group"><label>Name</label><input type="text" [(ngModel)]="form.name" /></div>
-        <div class="form-group"><label>Username</label><input type="text" [(ngModel)]="form.username" /></div>
-        <div class="form-group"><label>Password</label><input type="password" [(ngModel)]="form.password" /></div>
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" [(ngModel)]="form.name" />
+        </div>
+
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" [(ngModel)]="form.username" />
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" [(ngModel)]="form.password" />
+        </div>
+
         <div class="form-group">
           <label>Role</label>
           <select [(ngModel)]="form.role">
-            @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
+            @for (r of roles; track r) {
+              <option [value]="r">{{ r }}</option>
+            }
           </select>
         </div>
       </div>

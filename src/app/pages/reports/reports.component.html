@@ -41,7 +41,35 @@
             🔀 Both
           </button>
         </div>
+        
       </div>
+      <div class="filter-group user-dropdown-wrap">
+  <div class="filter-label">Users</div>
+
+  <button
+    type="button"
+    class="user-dropdown-btn"
+    (click)="toggleDailyUserDropdown()"
+  >
+    {{ dailyUsersLabel() }}
+    <span>▾</span>
+  </button>
+
+  @if (dailyUserDropdownOpen) {
+    <div class="user-dropdown-menu">
+      @for (p of persons; track p) {
+        <label class="user-check-item">
+          <input
+            type="checkbox"
+            [checked]="selectedDailyPersons.includes(p)"
+            (change)="toggleDailyPerson(p)"
+          />
+          <span>{{ p }}</span>
+        </label>
+      }
+    </div>
+  }
+</div>
 
       <button class="btn btn-primary btn-sm" (click)="copyDailyReport()">
         Copy WhatsApp Message

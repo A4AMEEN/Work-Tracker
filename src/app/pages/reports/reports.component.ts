@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../core/services/report.service';
+import { AuthService } from '../../core/services/auth.service';
 
 type ReportMode = 'taskDate' | 'completedOn' | 'both';
 
@@ -21,7 +22,7 @@ export class ReportsComponent implements OnInit {
     status: '',
     mode: 'taskDate' as ReportMode
   };
-
+dailyUserDropdownOpen = false;
   data: any;
   dailyReport: any;
 
@@ -31,7 +32,10 @@ export class ReportsComponent implements OnInit {
   loading = false;
   reportCopied = false;
 
-  persons = ['Ansari', 'Ameen', 'Kaviya', 'Rajeena', 'Rohan'];
+  persons = ['All', 'Ansari', 'Ameen', 'Kaviya', 'Rajeena', 'Rohan'];
+
+  selectedDailyPersons: string[] = [];
+  selectedSummaryPersons: string[] = [];
 
   statuses = [
     'Pending',
@@ -43,9 +47,19 @@ export class ReportsComponent implements OnInit {
     'Rework'
   ];
 
-  constructor(private reportService: ReportService) {}
+  constructor(
+    private reportService: ReportService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
+    const currentUser = this.auth.currentUser()?.name || 'Ameen';
+
+    this.selectedDailyPersons = [currentUser];
+    this.selectedSummaryPersons = [currentUser];
+
+    this.filters.person = currentUser;
+
     this.loadReport();
     this.loadDailyReport();
   }
@@ -60,10 +74,57 @@ export class ReportsComponent implements OnInit {
     this.loadReport();
   }
 
+  toggleDailyPerson(person: string): void {
+    this.selectedDailyPersons = this.togglePersonSelection(
+      this.selectedDailyPersons,
+      person
+    );
+
+    this.loadDailyReport();
+  }
+
+  toggleSummaryPerson(person: string): void {
+    this.selectedSummaryPersons = this.togglePersonSelection(
+      this.selectedSummaryPersons,
+      person
+    );
+
+    this.filters.person = this.getPersonParam(this.selectedSummaryPersons);
+    this.loadReport();
+  }
+
+  private togglePersonSelection(selected: string[], person: string): string[] {
+    const currentUser = this.auth.currentUser()?.name || 'Ameen';
+
+    if (person === 'All') {
+      return ['All'];
+    }
+
+    let next = selected.filter(p => p !== 'All');
+
+    if (next.includes(person)) {
+      next = next.filter(p => p !== person);
+    } else {
+      next = [...next, person];
+    }
+
+    return next.length ? next : [currentUser];
+  }
+
+  getPersonParam(selected: string[]): string {
+    if (selected.includes('All')) return 'All';
+    return selected.join(',');
+  }
+
   loadReport(): void {
     this.loading = true;
 
-    this.reportService.getSummary(this.filters).subscribe({
+    const payload = {
+      ...this.filters,
+      person: this.getPersonParam(this.selectedSummaryPersons)
+    };
+
+    this.reportService.getSummary(payload).subscribe({
       next: (res) => {
         this.data = res.data;
         this.loading = false;
@@ -73,11 +134,17 @@ export class ReportsComponent implements OnInit {
   }
 
   loadDailyReport(): void {
-    this.reportService.getDailyReport(this.selectedDate, this.dailyMode).subscribe({
-      next: (res) => {
-        this.dailyReport = res.data;
-      }
-    });
+    this.reportService
+      .getDailyReport(
+        this.selectedDate,
+        this.dailyMode,
+        this.getPersonParam(this.selectedDailyPersons)
+      )
+      .subscribe({
+        next: (res) => {
+          this.dailyReport = res.data;
+        }
+      });
   }
 
   copyDailyReport(): void {
@@ -127,4 +194,17 @@ export class ReportsComponent implements OnInit {
 
     URL.revokeObjectURL(url);
   }
+  toggleDailyUserDropdown(): void {
+  this.dailyUserDropdownOpen = !this.dailyUserDropdownOpen;
+}
+
+dailyUsersLabel(): string {
+  if (this.selectedDailyPersons.includes('All')) return 'All Users';
+
+  if (this.selectedDailyPersons.length === 1) {
+    return this.selectedDailyPersons[0];
+  }
+
+  return `${this.selectedDailyPersons.length} users selected`;
+}
 }

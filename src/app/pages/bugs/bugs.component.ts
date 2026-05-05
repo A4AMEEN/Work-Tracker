@@ -180,8 +180,8 @@ this.editingBugAttachments = bug.attachments || [];
   saveBug(): void {
     if (this.saving) return;
 
-    if (!this.form.title || !this.form.description) {
-      alert('Please enter bug title and description.');
+    if (!this.form.title || !this.form.description || !this.form.module || !this.form.page) {
+      alert('Please fill in all required fields.');
       return;
     }
 
