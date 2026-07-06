@@ -1,61 +1,9 @@
-.mini-select {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 5px;
-  max-width: 135px;
-}
-
-.danger {
-  color: var(--backend);
-}
-
-.bug-title {
+.backlog-title {
   display: block;
-  max-width: 260px;
+  max-width: 220px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.bug-pill {
-  display: inline-flex;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.sev-low {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--done);
-}
-
-.sev-medium {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--pending);
-}
-
-.sev-high {
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--backend);
-}
-
-.sev-critical {
-  background: rgba(220, 38, 38, 0.25);
-  color: #ff4d4d;
-}
-
-.bug-linked {
-  display: inline-flex;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  background: rgba(20, 184, 166, 0.15);
-  color: #14b8a6;
 }
 
 .attachment-list.compact {
@@ -128,35 +76,7 @@ textarea:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
-.payload-box {
-  min-height: 140px;
-  font-family: monospace;
-  font-size: 12px;
-  background: #0f172a;
-  color: #e2e8f0;
-}
 
-.payload-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-.attachment-button {
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-}
-
-.payload-link {
-  color: #f59e0b;
-  font-weight: 700;
-}
-
-.payload-link:hover {
-  text-decoration: underline;
-}
 .attachment-button {
   background: transparent;
   border: none;
@@ -168,6 +88,7 @@ textarea:disabled {
 .attachment-button:hover {
   text-decoration: underline;
 }
+
 ::ng-deep .clickable-row { cursor: pointer; }
 
 .view-modal {
@@ -202,13 +123,6 @@ textarea:disabled {
   padding: 12px;
   max-height: 300px;
   overflow-y: auto;
-}
-
-.view-payload {
-  font-family: monospace;
-  font-size: 12px;
-  background: #0f172a;
-  color: #e2e8f0;
 }
 
 .view-attachments {

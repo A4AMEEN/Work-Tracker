@@ -152,7 +152,7 @@
 
         <tbody>
           @for (task of tasks; track task._id) {
-            <tr>
+            <tr class="clickable-row" (click)="openViewTask(task)">
               <td>
                 {{ task.date | date: "dd-MM-yyyy" }}<br />
                 <span class="text-xs text-muted">{{ task.day }}</span>
@@ -185,6 +185,7 @@
                       class="mini-select"
                       [(ngModel)]="tempStatus"
                       (ngModelChange)="onStatusChange(task, $event)"
+                      (click)="$event.stopPropagation()"
                     >
                       @for (s of statuses; track s) {
                         <option [value]="s">{{ s }}</option>
@@ -198,7 +199,7 @@
 
                       <button
                         class="status-edit-btn"
-                        (click)="tryStartStatusEdit(task)"
+                        (click)="tryStartStatusEdit(task); $event.stopPropagation()"
                         title="Edit Status"
                       >
                         ✏️
@@ -241,7 +242,7 @@
                       <button
                         type="button"
                         class="attachment-link attachment-button"
-                        (click)="openAttachment(file)"
+                        (click)="openAttachment(file); $event.stopPropagation()"
                         [title]="file.originalName"
                       >
                         📎 {{ file.originalName }}
@@ -252,13 +253,17 @@
                   <span class="text-muted">—</span>
                 }
               </td>
-              <td>
+               <td>
                 <div class="td-actions">
-                  <button class="btn-icon" (click)="openEditTask(task)">
+                  <button class="btn-icon" (click)="openViewTask(task); $event.stopPropagation()">
+                    👁️
+                  </button>
+
+                  <button class="btn-icon" (click)="openEditTask(task); $event.stopPropagation()">
                     ✏️
                   </button>
 
-                  <button class="btn-icon danger" (click)="deleteTask(task)">
+                  <button class="btn-icon danger" (click)="deleteTask(task); $event.stopPropagation()">
                     🗑️
                   </button>
                 </div>
@@ -279,6 +284,48 @@
 >
   {{ tooltipText }}
 </div>
+
+@if (showViewModal && viewTask) {
+  <div class="modal-overlay" (click)="closeViewModal()">
+    <div class="modal view-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">View Details</div>
+        <button class="btn-icon" (click)="closeViewModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="view-section">
+          <div class="view-label">Description</div>
+          <div class="view-content view-description">{{ viewTask.description }}</div>
+        </div>
+
+        @if (viewTask.remarks) {
+          <div class="view-section">
+            <div class="view-label">Remarks</div>
+            <div class="view-content">{{ viewTask.remarks }}</div>
+          </div>
+        }
+
+        <div class="view-section">
+          <div class="view-label">Attachments</div>
+          @if (viewTask.attachments?.length) {
+            <div class="view-attachments">
+              @for (file of viewTask.attachments; track file.fileName) {
+                <button type="button" class="attachment-link attachment-button" (click)="openAttachment(file)">
+                  📎 {{ file.originalName }}
+                </button>
+              }
+            </div>
+          } @else {
+            <span class="text-muted">No attachments</span>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeViewModal()">Close</button>
+      </div>
+    </div>
+  </div>
+}
 
 @if (showModal) {
   <div class="modal-overlay">

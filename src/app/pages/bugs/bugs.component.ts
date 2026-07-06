@@ -21,6 +21,9 @@ export class BugsComponent implements OnInit {
   saving = false;
   error = '';
 
+  showViewModal = false;
+  viewBug: Bug | null = null;
+
   apiBase = environment.apiUrl.replace('/api', '');
 
   showModal = false;
@@ -116,6 +119,16 @@ editingBugAttachments: any[] = [];
     };
 
     this.applyFilters();
+  }
+
+  openViewBug(bug: Bug): void {
+    this.viewBug = bug;
+    this.showViewModal = true;
+  }
+
+  closeViewModal(): void {
+    this.showViewModal = false;
+    this.viewBug = null;
   }
 
   openAddBug(): void {

@@ -102,7 +102,7 @@
             </tr>
           } @else {
             @for (bug of filteredBugs; track bug._id) {
-              <tr>
+              <tr class="clickable-row" (click)="openViewBug(bug)">
                 <td class="td-desc">
                   <strong class="bug-title" [title]="bug.title">{{
                     bug.title
@@ -139,7 +139,7 @@
                       <button
                         type="button"
                         class="attachment-link attachment-button payload-link"
-                        (click)="openEditBug(bug)"
+                        (click)="openEditBug(bug); $event.stopPropagation()"
                         title="Open payload / error details"
                       >
                         🧾 Payload
@@ -151,7 +151,7 @@
                         <button
                           type="button"
                           class="attachment-link attachment-button"
-                          (click)="openAttachment(file)"
+                          (click)="openAttachment(file); $event.stopPropagation()"
                           [title]="file.originalName"
                         >
                           📎 {{ file.originalName }}
@@ -171,7 +171,7 @@
                   } @else {
                     <button
                       class="btn btn-secondary btn-sm"
-                      (click)="convertBugToTask(bug)"
+                      (click)="convertBugToTask(bug); $event.stopPropagation()"
                     >
                       Make Task
                     </button>
@@ -184,18 +184,23 @@
                       class="mini-select"
                       [ngModel]="bug.status"
                       (ngModelChange)="updateStatus(bug, $event)"
+                      (click)="$event.stopPropagation()"
                     >
                       @for (s of statuses; track s) {
                         <option [value]="s">{{ s }}</option>
                       }
                     </select>
 
-                    <button class="btn-icon" (click)="openEditBug(bug)">
+                    <button class="btn-icon" (click)="openViewBug(bug); $event.stopPropagation()">
+                      👁️
+                    </button>
+
+                    <button class="btn-icon" (click)="openEditBug(bug); $event.stopPropagation()">
                       ✏️
                     </button>
 
                     @if (auth.isAdmin()) {
-                      <button class="btn-icon danger" (click)="deleteBug(bug)">
+                      <button class="btn-icon danger" (click)="deleteBug(bug); $event.stopPropagation()">
                         🗑
                       </button>
                     }
@@ -215,6 +220,55 @@
     </div>
   </div>
 </div>
+
+@if (showViewModal && viewBug) {
+  <div class="modal-overlay" (click)="closeViewModal()">
+    <div class="modal view-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">View Details — {{ viewBug.title }}</div>
+        <button class="btn-icon" (click)="closeViewModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="view-section">
+          <div class="view-label">Description</div>
+          <div class="view-content view-description">{{ viewBug.description }}</div>
+        </div>
+
+        @if (viewBug.payload) {
+          <div class="view-section">
+            <div class="view-label">Payload / Error Details</div>
+            <div class="view-content view-description view-payload">{{ viewBug.payload }}</div>
+          </div>
+        }
+
+        @if (viewBug.remarks) {
+          <div class="view-section">
+            <div class="view-label">Remarks</div>
+            <div class="view-content">{{ viewBug.remarks }}</div>
+          </div>
+        }
+
+        <div class="view-section">
+          <div class="view-label">Attachments</div>
+          @if (viewBug.attachments?.length) {
+            <div class="view-attachments">
+              @for (file of viewBug.attachments; track file.fileName) {
+                <button type="button" class="attachment-link attachment-button" (click)="openAttachment(file)">
+                  📎 {{ file.originalName }}
+                </button>
+              }
+            </div>
+          } @else {
+            <span class="text-muted">No attachments</span>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeViewModal()">Close</button>
+      </div>
+    </div>
+  </div>
+}
 
 @if (showModal) {
   <div class="modal-overlay">

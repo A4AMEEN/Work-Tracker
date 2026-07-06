@@ -37,6 +37,9 @@ export class TasksComponent implements OnInit, OnDestroy {
   saving = false;
   error = "";
 
+  showViewModal = false;
+  viewTask: Task | null = null;
+
   apiBase = environment.apiUrl.replace("/api", "");
   selectedFiles: File[] = [];
   editingTaskAttachments: any[] = [];
@@ -282,6 +285,16 @@ export class TasksComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.resetFilters();
     this.applyClientFilters();
+  }
+
+  openViewTask(task: Task): void {
+    this.viewTask = task;
+    this.showViewModal = true;
+  }
+
+  closeViewModal(): void {
+    this.showViewModal = false;
+    this.viewTask = null;
   }
 
   openAddTask(): void {
