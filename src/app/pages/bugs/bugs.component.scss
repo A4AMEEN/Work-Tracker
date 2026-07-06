@@ -217,6 +217,19 @@ textarea:disabled {
   gap: 6px;
 }
 
+.convert-preview {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+.convert-preview strong {
+  color: var(--text);
+}
+
 :host {
   display: flex;
   flex-direction: column;

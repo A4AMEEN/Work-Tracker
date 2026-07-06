@@ -36,9 +36,10 @@ export class BugService {
     });
   }
 
-  convertToTask(id: string, assignTo: string) {
+  convertToTask(id: string, assignTo: string, approverUserId = '') {
     return this.http.post<ApiResponse<any>>(`${this.api}/${id}/convert-to-task`, {
-      assignTo
+      assignTo,
+      approverUserId
     });
   }
 

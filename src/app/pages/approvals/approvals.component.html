@@ -1,0 +1,298 @@
+<div id="topbar">
+  <h1>Approvals</h1>
+</div>
+
+<div id="content" style="overflow-y: auto; height: 100%">
+  <div class="quick-filters">
+    <button
+      class="qf-btn"
+      [class.active]="activeTab === 'pending'"
+      (click)="setTab('pending')"
+    >⏳ Pending</button>
+
+    <button
+      class="qf-btn"
+      [class.active]="activeTab === 'approved'"
+      (click)="setTab('approved')"
+    >✅ Approved</button>
+
+    <button
+      class="qf-btn"
+      [class.active]="activeTab === 'reworked'"
+      (click)="setTab('reworked')"
+    >🔄 Reworked</button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Search</div>
+      <input
+        type="text"
+        class="search-input"
+        [(ngModel)]="filters.search"
+        (input)="applyFilters()"
+        placeholder="Search tasks..."
+      />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Assigned To</div>
+      <select [(ngModel)]="filters.person" (change)="applyFilters()">
+        <option value="">All</option>
+        @for (p of persons; track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Module</div>
+      <input
+        type="text"
+        [(ngModel)]="filters.module"
+        (input)="applyFilters()"
+        placeholder="Module"
+      />
+    </div>
+
+    <button class="btn btn-secondary btn-sm" (click)="clearFilters()">
+      ✕ Clear
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-count">{{ filteredTasks.length }} tasks</span>
+      <button class="btn-icon ml-auto" (click)="loadTasks()">↻</button>
+    </div>
+
+    <div style="overflow-x: auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Module</th>
+            <th>Page</th>
+            <th>Assigned To</th>
+            <th>Status</th>
+            <th>Approval</th>
+            <th>Days</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (loading) {
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">Loading...</div>
+              </td>
+            </tr>
+          } @else if (error) {
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">{{ error }}</div>
+              </td>
+            </tr>
+          } @else {
+            @for (task of filteredTasks; track task._id) {
+              <tr class="clickable-row" (click)="openView(task)">
+                <td class="td-desc">
+                  <span class="td-desc-text" [title]="task.description">
+                    {{ task.description }}
+                  </span>
+                  <div class="td-sub">by {{ task.createdBy }}</div>
+                </td>
+
+                <td>{{ task.module }}</td>
+                <td>{{ task.page }}</td>
+
+                <td><strong>{{ task.person }}</strong></td>
+
+                <td>
+                  <span class="badge badge-{{ badgeClass(task.status) }}">
+                    {{ task.status }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge badge-approval-{{ badgeClass(task.approvalStatus || '') }}">
+                    {{ task.approvalStatus }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="days-pill">{{ daysPending(task.createdAt) }}d</span>
+                </td>
+
+                <td>
+                  <div class="td-actions">
+                    <button class="btn-icon" (click)="openView(task); $event.stopPropagation()">
+                      👁️
+                    </button>
+
+                    @if (activeTab === 'pending') {
+                      <button
+                        class="btn btn-primary btn-sm"
+                        (click)="openApprove(task); $event.stopPropagation()"
+                      >✅ Approve</button>
+
+                      <button
+                        class="btn btn-secondary btn-sm"
+                        (click)="openRework(task); $event.stopPropagation()"
+                      >🔄 Rework</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8">
+                  <div class="empty-state">No tasks found</div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+@if (showViewModal && viewTask) {
+  <div class="modal-overlay" (click)="closeViewModal()">
+    <div class="modal view-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">View Task Details</div>
+        <button class="btn-icon" (click)="closeViewModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="view-section">
+          <div class="view-label">Description</div>
+          <div class="view-content view-description">{{ viewTask.description }}</div>
+        </div>
+
+        <div class="view-section">
+          <div class="view-label">Task Info</div>
+          <div class="view-content">
+            <div>Module: <strong>{{ viewTask.module }}</strong></div>
+            <div>Page: <strong>{{ viewTask.page }}</strong></div>
+            <div>Assigned To: <strong>{{ viewTask.person }}</strong></div>
+            <div>Created By: <strong>{{ viewTask.createdBy }}</strong></div>
+            <div>Status: <span class="badge badge-{{ badgeClass(viewTask.status) }}">{{ viewTask.status }}</span></div>
+            <div>Approval: <span class="badge badge-approval-{{ badgeClass(viewTask.approvalStatus || '') }}">{{ viewTask.approvalStatus }}</span></div>
+          </div>
+        </div>
+
+        @if (viewTask.remarks) {
+          <div class="view-section">
+            <div class="view-label">Remarks</div>
+            <div class="view-content">{{ viewTask.remarks }}</div>
+          </div>
+        }
+
+        @if (viewTask.approverRemarks) {
+          <div class="view-section">
+            <div class="view-label">Approver Remarks</div>
+            <div class="view-content">{{ viewTask.approverRemarks }}</div>
+          </div>
+        }
+
+        @if (viewTask.reworkReason) {
+          <div class="view-section">
+            <div class="view-label">Rework Reason</div>
+            <div class="view-content">{{ viewTask.reworkReason }}</div>
+          </div>
+        }
+
+        <div class="view-section">
+          <div class="view-label">Attachments</div>
+          @if (viewTask.attachments?.length) {
+            <div class="view-attachments">
+              @for (file of viewTask.attachments; track file.fileName) {
+                <button type="button" class="attachment-link attachment-button" (click)="openAttachment(file)">
+                  📎 {{ file.originalName }}
+                </button>
+              }
+            </div>
+          } @else {
+            <span class="text-muted">No attachments</span>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeViewModal()">Close</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showApproveModal) {
+  <div class="modal-overlay">
+    <div class="modal" style="max-width: 420px">
+      <div class="modal-header">
+        <div class="modal-title">Approve Task</div>
+        <button class="btn-icon" (click)="closeApproveModal()" [disabled]="approving">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group full">
+          <label>Remarks (optional)</label>
+          <textarea
+            [(ngModel)]="approveRemarks"
+            placeholder="Add approval remarks..."
+            [disabled]="approving"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeApproveModal()" [disabled]="approving">Cancel</button>
+        <button class="btn btn-primary" (click)="confirmApprove()" [disabled]="approving">
+          @if (approving) {
+            <span class="spinner"></span> Approving...
+          } @else {
+            ✅ Approve
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showReworkModal) {
+  <div class="modal-overlay">
+    <div class="modal" style="max-width: 420px">
+      <div class="modal-header">
+        <div class="modal-title">Send for Rework</div>
+        <button class="btn-icon" (click)="closeReworkModal()" [disabled]="reworking">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group full">
+          <label>Rework Reason <span class="req">*</span></label>
+          <textarea
+            [(ngModel)]="reworkReason"
+            placeholder="Explain what needs to be changed..."
+            [disabled]="reworking"
+          ></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Remarks (optional)</label>
+          <textarea
+            [(ngModel)]="reworkRemarks"
+            placeholder="Additional remarks..."
+            [disabled]="reworking"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeReworkModal()" [disabled]="reworking">Cancel</button>
+        <button class="btn btn-danger" (click)="confirmRework()" [disabled]="reworking">
+          @if (reworking) {
+            <span class="spinner"></span> Sending...
+          } @else {
+            🔄 Send for Rework
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

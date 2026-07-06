@@ -171,7 +171,7 @@
                   } @else {
                     <button
                       class="btn btn-secondary btn-sm"
-                      (click)="convertBugToTask(bug); $event.stopPropagation()"
+                      (click)="$event.stopPropagation(); openConvertModal(bug)"
                     >
                       Make Task
                     </button>
@@ -472,6 +472,51 @@
             Saving...
           } @else {
             Save Bug
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showConvertModal && convertBug) {
+  <div class="modal-overlay" (click)="closeConvertModal()">
+    <div class="modal" (click)="$event.stopPropagation()" style="max-width:480px">
+      <div class="modal-header">
+        <div class="modal-title">Convert Bug to Task</div>
+        <button class="btn-icon" (click)="closeConvertModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Assigned To</label>
+            <select [(ngModel)]="convertForm.assignTo" [disabled]="saving">
+              @for (p of persons; track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Approval By</label>
+            <select [(ngModel)]="convertForm.approverUserId" [disabled]="saving">
+              <option value="">Self (auto-approve)</option>
+              @for (p of convertApproverOptions; track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="convert-preview">
+          Task will be created from bug: <strong>{{ convertBug.title }}</strong>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeConvertModal()" [disabled]="saving">Cancel</button>
+        <button class="btn btn-primary" (click)="confirmConvert()" [disabled]="saving">
+          @if (saving) {
+            <span class="spinner"></span> Converting...
+          } @else {
+            Convert to Task
           }
         </button>
       </div>

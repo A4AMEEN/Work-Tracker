@@ -1,0 +1,109 @@
+.days-pill {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--text3);
+}
+
+.attachment-link {
+  color: var(--accent);
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
+}
+
+.attachment-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.attachment-button:hover {
+  text-decoration: underline;
+}
+
+.spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+::ng-deep .clickable-row { cursor: pointer; }
+
+.view-modal {
+  max-width: 600px;
+}
+
+.view-section {
+  margin-bottom: 18px;
+}
+
+.view-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.view-content {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.view-description {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.view-attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}

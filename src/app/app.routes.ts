@@ -9,6 +9,7 @@ import { ReportsComponent } from "./pages/reports/reports.component";
 import { UsersComponent } from "./pages/users/users.component";
 import { BugsComponent } from "./pages/bugs/bugs.component";
 import { BacklogComponent } from "./pages/backlog/backlog.component";
+import { ApprovalsComponent } from "./pages/approvals/approvals.component";
 import { NotificationsComponent } from "./pages/notifications/notifications.component";
 export const routes: Routes = [
   { path: "login", component: LoginComponent },
@@ -60,6 +61,10 @@ export const routes: Routes = [
       {
         path: "backlog",
         component: BacklogComponent,
+      },
+      {
+        path: "approvals",
+        component: ApprovalsComponent,
       },
       { path: "history", component: HistoryComponent },
       { path: "reports", component: ReportsComponent },

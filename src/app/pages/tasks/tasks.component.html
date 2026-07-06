@@ -142,6 +142,7 @@
             <th>Page</th>
             <th>Type</th>
             <th>Status</th>
+            <th>Approval</th>
             <th>Priority</th>
             <th>Person</th>
             <th>Deadline</th>
@@ -210,6 +211,20 @@
                   <span class="badge badge-{{ badgeClass(task.status) }}">
                     {{ task.status }}
                   </span>
+                }
+              </td>
+
+              <td>
+                @if (task.approvalStatus && task.approvalStatus !== 'NotRequired') {
+                  <span class="badge badge-approval-{{ badgeClass(task.approvalStatus) }}">
+                    {{ task.approvalStatus }}
+                  </span>
+
+                  @if (task.approverUserId && task.approverUserId !== task.person) {
+                    <div class="text-xs text-muted">by {{ task.approverUserId }}</div>
+                  }
+                } @else {
+                  <span class="text-muted">—</span>
                 }
               </td>
 
@@ -305,6 +320,25 @@
           </div>
         }
 
+        @if (viewTask.approvalStatus && viewTask.approvalStatus !== 'NotRequired') {
+          <div class="view-section">
+            <div class="view-label">Approval</div>
+            <div class="view-content">
+              <div>Approver: <strong>{{ viewTask.approverUserId }}</strong></div>
+              <div>Status: <span class="badge badge-approval-{{ badgeClass(viewTask.approvalStatus) }}">{{ viewTask.approvalStatus }}</span></div>
+              @if (viewTask.approvedBy) {
+                <div>Approved By: <strong>{{ viewTask.approvedBy }}</strong></div>
+              }
+              @if (viewTask.approverRemarks) {
+                <div>Remarks: {{ viewTask.approverRemarks }}</div>
+              }
+              @if (viewTask.reworkReason) {
+                <div>Rework Reason: {{ viewTask.reworkReason }}</div>
+              }
+            </div>
+          </div>
+        }
+
         <div class="view-section">
           <div class="view-label">Attachments</div>
           @if (viewTask.attachments?.length) {
@@ -368,8 +402,18 @@
 
           <div class="form-group">
             <label>Assigned Person <span class="req">*</span></label>
-            <select [(ngModel)]="form.person" [disabled]="saving">
+            <select [(ngModel)]="form.person" (ngModelChange)="onPersonChange($event)" [disabled]="saving">
               @for (p of persons; track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Approval By</label>
+            <select [(ngModel)]="form.approverUserId" [disabled]="saving">
+              <option value="">Self (auto-approve)</option>
+              @for (p of approverOptions; track p) {
                 <option [value]="p">{{ p }}</option>
               }
             </select>

@@ -6,6 +6,7 @@ import { AuthService } from "../../core/services/auth.service";
 import { TaskService } from "../../core/services/task.service";
 import { CacheService } from "../../core/services/cache.service";
 import { NotificationService } from "../../core/services/notification.service";
+import { SocketService } from "../../core/services/socket.service";
 import { Router } from "@angular/router";
 import {
   Priority,
@@ -15,7 +16,7 @@ import {
   WorkingType,
 } from "../../core/models/task.model";
 import { environment } from "../../../environments/environment";
-import { Subject, Subscription } from "rxjs";
+import { Subject, Subscription, interval } from "rxjs";
 import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 
 type TaskView = "all" | "today" | "pending" | "done" | "backend" | "my";
@@ -93,6 +94,7 @@ export class TasksComponent implements OnInit, OnDestroy {
     private taskService: TaskService,
     private cache: CacheService,
     public notificationService: NotificationService,
+    private socket: SocketService,
     private router: Router,
   ) {}
 
@@ -114,6 +116,33 @@ export class TasksComponent implements OnInit, OnDestroy {
         }
 
         this.loadTasks();
+      }),
+    );
+
+    this.subs.add(
+      this.socket.onTaskUpdated().subscribe((updated) => {
+        const idx = this.allTasks.findIndex(t => t._id === updated._id);
+        if (idx !== -1) {
+          this.allTasks[idx] = updated;
+          this.cache.invalidatePrefix("tasks:");
+          this.applyClientFilters();
+        }
+      }),
+    );
+
+    this.subs.add(
+      this.socket.onTaskDeleted().subscribe((id) => {
+        this.allTasks = this.allTasks.filter(t => t._id !== id);
+        this.cache.invalidatePrefix("tasks:");
+        this.applyClientFilters();
+      }),
+    );
+
+    // Polling fallback for Vercel (socket.io unavailable) — refreshes every 30s
+    this.subs.add(
+      interval(30_000).subscribe(() => {
+        this.cache.invalidatePrefix("tasks:");
+        this.fetchFromApi(this.cacheKey(), true);
       }),
     );
   }
@@ -165,7 +194,7 @@ export class TasksComponent implements OnInit, OnDestroy {
     } else {
       const apiFilters: any = { limit: 500 };
       if (this.view === "pending") apiFilters.status = "Pending";
-      if (this.view === "done") apiFilters.status = "Done";
+      if (this.view === "done") apiFilters.status = "Done,Completed";
       if (this.view === "backend") apiFilters.status = "Backend Needed";
       request$ = this.taskService.getTasks(apiFilters);
     }
@@ -223,7 +252,11 @@ export class TasksComponent implements OnInit, OnDestroy {
       result = result.filter((t) => t.workingType === workingType);
 
     if (this.quickFilter !== "all") {
-      result = result.filter((t) => t.status === this.quickFilter);
+      if (this.quickFilter === "Done") {
+        result = result.filter((t) => t.status === "Done" || t.status === "Completed");
+      } else {
+        result = result.filter((t) => t.status === this.quickFilter);
+      }
     } else if (status) {
       result = result.filter((t) => t.status === status);
     }
@@ -237,20 +270,33 @@ export class TasksComponent implements OnInit, OnDestroy {
     }
     const statusRank: Record<string, number> = {
       Pending: 1,
-      Rework: 2,
+      Working: 2,
       "Backend Needed": 3,
-      Working: 4,
-      Testing: 5,
-      "Test Done": 6,
+      Testing: 4,
+      "Test Done": 5,
+      Rework: 6,
       Done: 7,
+      Completed: 8,
     };
 
     result = result.sort((a, b) => {
       // My Tasks + Today: active tasks top, done bottom
       if (this.view === "my" || this.view === "today") {
-        const statusDiff =
-          (statusRank[a.status] || 99) - (statusRank[b.status] || 99);
-        if (statusDiff !== 0) return statusDiff;
+        const rankA = statusRank[a.status] || 99;
+        const rankB = statusRank[b.status] || 99;
+        if (rankA !== rankB) return rankA - rankB;
+
+        // Pending: newest first
+        if (a.status === "Pending" && b.status === "Pending") {
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        }
+
+        // Done/Completed: most recent first
+        if (rankA >= 7) {
+          const aTime = new Date(a.completedAt || a.updatedAt || 0).getTime();
+          const bTime = new Date(b.completedAt || b.updatedAt || 0).getTime();
+          return bTime - aTime;
+        }
 
         const aTime = new Date(a.deadlineAt || `${a.date}T00:00:00`).getTime();
         const bTime = new Date(b.deadlineAt || `${b.date}T00:00:00`).getTime();
@@ -323,6 +369,7 @@ export class TasksComponent implements OnInit, OnDestroy {
       deadlineTime: task.deadlineTime || "",
       estimatedHours: task.estimatedHours || 0,
       payload: "",
+      approverUserId: task.approverUserId || "",
     };
 
     this.showModal = true;
@@ -707,7 +754,7 @@ export class TasksComponent implements OnInit, OnDestroy {
   }
   getDeadlineText(task: Task): string {
     if (!task.deadlineAt) return "No deadline";
-    if (task.status === "Done" || task.status === "Test Done")
+    if (task.status === "Done" || task.status === "Test Done" || task.status === "Completed")
       return "Completed";
 
     const now = new Date().getTime();
@@ -742,9 +789,21 @@ export class TasksComponent implements OnInit, OnDestroy {
       deadlineDate: "",
       deadlineTime: "",
       estimatedHours: 0,
+      approverUserId: "",
     };
   }
+  get approverOptions(): string[] {
+    return this.persons.filter(p => p !== this.form.person);
+  }
+
+  onPersonChange(person: string): void {
+    const currentUser = this.auth.currentUser()?.name;
+    this.form.approverUserId = person === currentUser ? "" : "";
+  }
+
   canEditTaskStatus(task: Task): boolean {
+  if (task.status === "Completed") return false;
+
   const currentUser = this.auth.currentUser()?.name;
 
   return (

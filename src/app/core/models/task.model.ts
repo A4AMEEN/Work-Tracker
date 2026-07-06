@@ -7,7 +7,10 @@ export type TaskStatus =
   | 'Backend Needed'
   | 'Testing'
   | 'Test Done'
-  | 'Rework';
+  | 'Rework'
+  | 'Completed';
+
+export type ApprovalStatus = 'NotRequired' | 'Pending' | 'Approved' | 'Rework';
 
 export type Priority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
@@ -33,16 +36,21 @@ export interface Task {
   person: string;
   priority: Priority;
   remarks?: string;
-deadlineDate?: string;
-deadlineTime?: string;
-deadlineAt?: string;
-estimatedHours?: number;
+  deadlineDate?: string;
+  deadlineTime?: string;
+  deadlineAt?: string;
+  estimatedHours?: number;
   testedBy?: string;
   testRemarks?: string;
   reworkCount?: number;
-
+  approverUserId?: string;
+  approvalStatus?: ApprovalStatus;
+  approvedBy?: string;
+  approvedDate?: string;
+  approverRemarks?: string;
+  reworkReason?: string;
+  completedAt?: string;
   attachments?: TaskAttachment[];
-
   createdBy: string;
   updatedBy?: string;
   createdAt?: string;
@@ -62,9 +70,10 @@ export interface TaskPayload {
   remarks?: string;
   changeRemark?: string;
   deadlineDate?: string;
-deadlineTime?: string;
-estimatedHours?: number;
-payload?: any;
+  deadlineTime?: string;
+  estimatedHours?: number;
+  payload?: any;
+  approverUserId?: string;
 }
 
 export interface ApiResponse<T> {

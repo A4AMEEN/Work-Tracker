@@ -1,55 +1,60 @@
-<div id="sidebar">
+<div id="sidebar" [class.collapsed]="collapsed()">
   <div class="sidebar-logo">
-    Work<span>Track</span><small>v1.0 — Internal Tool</small>
+    <button class="sidebar-toggle" (click)="toggleSidebar()" title="Toggle sidebar">☰</button>
+    <span class="logo-text">Work<span>Track</span></span>
+    <small>v1.0 — Internal Tool</small>
   </div>
 
   <div class="nav-section">
     <div class="nav-label">Main</div>
     <a routerLink="/dashboard" routerLinkActive="active" class="nav-item"
-      ><span class="icon">📊</span> Dashboard</a
+      ><span class="icon">📊</span><span class="nav-label-text">Dashboard</span></a
     >
     <a routerLink="/tasks" routerLinkActive="active" class="nav-item"
-      ><span class="icon">📋</span> All Tasks</a
+      ><span class="icon">📋</span><span class="nav-label-text">All Tasks</span></a
     >
     <a routerLink="/today" routerLinkActive="active" class="nav-item"
-      ><span class="icon">📅</span> Today's Work</a
+      ><span class="icon">📅</span><span class="nav-label-text">Today's Work</span></a
     >
   </div>
 
   <div class="nav-section">
     <div class="nav-label">Tracking</div>
     <a routerLink="/my-tasks" routerLinkActive="active" class="nav-item"
-      ><span class="icon">👤</span> My Tasks</a
+      ><span class="icon">👤</span><span class="nav-label-text">My Tasks</span></a
     >
     <a routerLink="/pending" routerLinkActive="active" class="nav-item"
-      ><span class="icon">⏳</span> Pending Tasks</a
+      ><span class="icon">⏳</span><span class="nav-label-text">Pending Tasks</span></a
     >
     <a routerLink="/done" routerLinkActive="active" class="nav-item"
-      ><span class="icon">✅</span> Done Tasks</a
+      ><span class="icon">✅</span><span class="nav-label-text">Done Tasks</span></a
     >
     <a routerLink="/backend-needed" routerLinkActive="active" class="nav-item"
-      ><span class="icon">🔴</span> Backend Needed</a
+      ><span class="icon">🔴</span><span class="nav-label-text">Backend Needed</span></a
     >
   </div>
 
   <div class="nav-section">
     <div class="nav-label">Insights</div>
     <a routerLink="/bugs" routerLinkActive="active" class="nav-item">
-      <span class="icon">🐞</span> Bugs
+      <span class="icon">🐞</span><span class="nav-label-text">Bugs</span>
     </a>
 
     <a routerLink="/backlog" routerLinkActive="active" class="nav-item">
-      <span class="icon">📋</span> Backlog
+      <span class="icon">📋</span><span class="nav-label-text">Backlog</span>
     </a>
 
     <a routerLink="/notifications" routerLinkActive="active" class="nav-item">
-      <span class="icon">🔔</span> Notifications
+      <span class="icon">🔔</span><span class="nav-label-text">Notifications</span>
     </a>
     <a routerLink="/history" routerLinkActive="active" class="nav-item"
-      ><span class="icon">📜</span> History Log</a
+      ><span class="icon">📜</span><span class="nav-label-text">History Log</span></a
     >
+    <a routerLink="/approvals" routerLinkActive="active" class="nav-item">
+      <span class="icon">✅</span><span class="nav-label-text">Approvals</span>
+    </a>
     <a routerLink="/reports" routerLinkActive="active" class="nav-item"
-      ><span class="icon">📈</span> Reports</a
+      ><span class="icon">📈</span><span class="nav-label-text">Reports</span></a
     >
   </div>
 
@@ -57,7 +62,7 @@
     <div class="nav-section">
       <div class="nav-label">Admin</div>
       <a routerLink="/users" routerLinkActive="active" class="nav-item"
-        ><span class="icon">👥</span> Users</a
+        ><span class="icon">👥</span><span class="nav-label-text">Users</span></a
       >
     </div>
   }
@@ -69,8 +74,7 @@
       <div class="user-role">{{ user()?.role }}</div>
     </div>
     <button
-      class="btn-icon"
-      style="margin-left: auto"
+      class="btn-icon logout-btn"
       (click)="logout()"
       title="Logout"
     >
@@ -81,4 +85,5 @@
 
 <div id="main">
   <router-outlet></router-outlet>
+  <app-toast-container></app-toast-container>
 </div>

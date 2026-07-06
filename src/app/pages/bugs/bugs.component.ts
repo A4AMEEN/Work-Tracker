@@ -24,6 +24,10 @@ export class BugsComponent implements OnInit {
   showViewModal = false;
   viewBug: Bug | null = null;
 
+  showConvertModal = false;
+  convertBug: Bug | null = null;
+  convertForm = { assignTo: '', approverUserId: '' };
+
   apiBase = environment.apiUrl.replace('/api', '');
 
   showModal = false;
@@ -237,15 +241,46 @@ this.editingBugAttachments = bug.attachments || [];
     });
   }
 
-  convertBugToTask(bug: Bug): void {
-    const assignTo = prompt('Assign task to:', bug.assignedTo || 'Ameen') || bug.assignedTo || 'Ameen';
+  get convertApproverOptions(): string[] {
+    return this.persons.filter(p => p !== this.convertForm.assignTo);
+  }
 
-    this.bugService.convertToTask(bug._id, assignTo).subscribe({
+  openConvertModal(bug: Bug): void {
+    const currentUser = this.auth.currentUser()?.name || '';
+    this.convertBug = bug;
+    this.convertForm = {
+      assignTo: bug.assignedTo || currentUser,
+      approverUserId: bug.reportedBy !== currentUser ? bug.reportedBy : '',
+    };
+    this.showConvertModal = true;
+  }
+
+  closeConvertModal(): void {
+    if (this.saving) return;
+    this.showConvertModal = false;
+    this.convertBug = null;
+  }
+
+  confirmConvert(): void {
+    if (this.saving) return;
+    const bug = this.convertBug;
+    if (!bug) return;
+    if (!this.convertForm.assignTo) {
+      alert('Please select an assignee.');
+      return;
+    }
+
+    this.saving = true;
+    this.bugService.convertToTask(bug._id, this.convertForm.assignTo, this.convertForm.approverUserId).subscribe({
       next: () => {
-        alert('Bug converted to task successfully.');
+        this.saving = false;
+        this.closeConvertModal();
         this.loadBugs();
       },
-      error: (err) => alert(err?.error?.message || 'Convert failed.')
+      error: (err) => {
+        this.saving = false;
+        alert(err?.error?.message || 'Convert failed.');
+      }
     });
   }
 

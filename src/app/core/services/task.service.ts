@@ -64,6 +64,19 @@ export class TaskService {
     });
   }
 
+  approveTask(id: string, remarks = "") {
+    return this.http.patch<ApiResponse<Task>>(`${this.api}/${id}/approve`, {
+      remarks,
+    });
+  }
+
+  reworkTask(id: string, reworkReason: string, remarks = "") {
+    return this.http.patch<ApiResponse<Task>>(`${this.api}/${id}/rework`, {
+      reworkReason,
+      remarks,
+    });
+  }
+
   updateTestResult(id: string, passed: boolean, remark = "") {
     return this.http.patch<ApiResponse<Task>>(`${this.api}/${id}/test-result`, {
       passed,
@@ -81,7 +94,6 @@ export class TaskService {
     return this.http.delete<ApiResponse<null>>(`${this.api}/${id}`);
   }
 
-  // prevents duplicate simultaneous requests for the same key
   private dedupe<T>(key: string, request$: Observable<T>): Observable<T> {
     if (this.inflight.has(key)) return this.inflight.get(key)!;
     const shared$ = request$.pipe(share());
@@ -108,6 +120,7 @@ export class TaskService {
     formData.append("deadlineTime", data.deadlineTime || "");
     formData.append("estimatedHours", String(data.estimatedHours || 0));
     if (data.changeRemark) formData.append("changeRemark", data.changeRemark);
+    if (data.approverUserId) formData.append("approverUserId", data.approverUserId);
     files.forEach((file) => formData.append("attachments", file));
 
     return formData;

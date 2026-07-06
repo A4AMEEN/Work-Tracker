@@ -6,7 +6,10 @@ export type NotificationType =
   | 'BUG_TO_TASK'
   | 'REWORK'
   | 'STATUS_UPDATE'
-  | 'GENERAL';
+  | 'GENERAL'
+  | 'APPROVAL_PENDING'
+  | 'APPROVAL_APPROVED'
+  | 'APPROVAL_REWORK';
 
 export type NotificationTargetType = 'Task' | 'Bug' | 'General';
 
