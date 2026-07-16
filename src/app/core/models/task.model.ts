@@ -24,6 +24,15 @@ export interface TaskAttachment {
   uploadedAt: string;
 }
 
+export interface Subtask {
+  _id: string;
+  description: string;
+  assignedTo: string;
+  isCompleted: boolean;
+  completedBy?: string;
+  completedAt?: string;
+}
+
 export interface Task {
   _id: string;
   date: string;
@@ -56,6 +65,10 @@ export interface Task {
   createdAt?: string;
   updatedAt?: string;
   isCarriedForward?: boolean;
+  taskTitle?: string;
+  isMultiAssignment?: boolean;
+  assignedUsers?: string[];
+  subtasks?: Subtask[];
 }
 
 export interface TaskPayload {
@@ -74,6 +87,10 @@ export interface TaskPayload {
   estimatedHours?: number;
   payload?: any;
   approverUserId?: string;
+  taskTitle?: string;
+  isMultiAssignment?: boolean;
+  assignedUsers?: string[];
+  subtasks?: { description: string; assignedTo: string }[];
 }
 
 export interface ApiResponse<T> {

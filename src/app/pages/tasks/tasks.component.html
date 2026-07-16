@@ -162,10 +162,10 @@
               <td>
                 <span
                   class="td-desc-text"
-                  (mouseenter)="showTooltip($event, task.description)"
+                  (mouseenter)="showTooltip($event, task.isMultiAssignment && task.taskTitle ? task.taskTitle : task.description)"
                   (mouseleave)="hideTooltip()"
                 >
-                  {{ task.description }}
+                  {{ task.isMultiAssignment && task.taskTitle ? task.taskTitle : task.description }}
                 </span>
                 <div class="td-sub">by {{ task.createdBy }}</div>
               </td>
@@ -180,38 +180,53 @@
               </td>
 
               <td>
-                @if (view === 'my' || view === 'today' || view === 'all') {
-                  @if (editingStatusTaskId === task._id) {
-                    <select
-                      class="mini-select"
-                      [(ngModel)]="tempStatus"
-                      (ngModelChange)="onStatusChange(task, $event)"
-                      (click)="$event.stopPropagation()"
-                    >
-                      @for (s of statuses; track s) {
-                        <option [value]="s">{{ s }}</option>
-                      }
-                    </select>
-                  } @else {
-                    <div class="status-view">
-                      <span class="badge badge-{{ badgeClass(task.status) }}">
-                        {{ task.status }}
-                      </span>
-
+                <div class="status-cell-inner">
+                  @if (task.isMultiAssignment) {
+                    <div class="status-multi-display">
+                      <strong>Multiple</strong>
                       <button
-                        class="status-edit-btn"
-                        (click)="tryStartStatusEdit(task); $event.stopPropagation()"
-                        title="Edit Status"
-                      >
-                        ✏️
-                      </button>
+                        class="btn-icon btn-icon-xs"
+                        (click)="openSubtaskPopup(task); $event.stopPropagation()"
+                        title="View subtasks"
+                      >✏️</button>
                     </div>
+                  } @else {
+                    @if (view === 'my' || view === 'today' || view === 'all') {
+                      @if (editingStatusTaskId === task._id) {
+                        <select
+                          class="mini-select"
+                          [(ngModel)]="tempStatus"
+                          (ngModelChange)="onStatusChange(task, $event)"
+                          (click)="$event.stopPropagation()"
+                        >
+                          @for (s of statuses; track s) {
+                            <option [value]="s">{{ s }}</option>
+                          }
+                        </select>
+                      } @else {
+                        <div class="status-view">
+                          <span class="badge badge-{{ badgeClass(task.status) }}">
+                            {{ task.status }}
+                          </span>
+
+                          <button
+                            class="status-edit-btn"
+                            (click)="tryStartStatusEdit(task); $event.stopPropagation()"
+                            title="Edit Status"
+                          >
+                            ✏️
+                          </button>
+                        </div>
+                      }
+                    } @else {
+                      <div class="status-view">
+                        <span class="badge badge-{{ badgeClass(task.status) }}">
+                          {{ task.status }}
+                        </span>
+                      </div>
+                    }
                   }
-                } @else {
-                  <span class="badge badge-{{ badgeClass(task.status) }}">
-                    {{ task.status }}
-                  </span>
-                }
+                </div>
               </td>
 
               <td>
@@ -235,7 +250,11 @@
               </td>
 
               <td>
-                <strong>{{ task.person }}</strong>
+                @if (task.isMultiAssignment) {
+                  <strong>Multiple</strong>
+                } @else {
+                  <strong>{{ task.person }}</strong>
+                }
               </td>
 
               <td>
@@ -308,10 +327,31 @@
         <button class="btn-icon" (click)="closeViewModal()">✕</button>
       </div>
       <div class="modal-body">
+        @if (viewTask.isMultiAssignment && viewTask.taskTitle) {
+          <div class="view-section">
+            <div class="view-label">Task Title</div>
+            <div class="view-content view-description">{{ viewTask.taskTitle }}</div>
+          </div>
+        }
         <div class="view-section">
           <div class="view-label">Description</div>
           <div class="view-content view-description">{{ viewTask.description }}</div>
         </div>
+
+        @if (viewTask.isMultiAssignment && viewTask.subtasks && viewTask.subtasks.length > 0) {
+          <div class="view-section">
+            <div class="view-label">Subtasks</div>
+            <div class="subtask-view-list">
+              @for (sub of viewTask.subtasks; track sub._id) {
+                <div class="subtask-view-item" [class.subtask-view-done]="sub.isCompleted">
+                  <span class="subtask-view-status">{{ sub.isCompleted ? '✓' : '○' }}</span>
+                  <span class="subtask-view-desc" [class.line-through]="sub.isCompleted">{{ sub.description }}</span>
+                  <span class="subtask-view-user">— {{ sub.assignedTo }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
 
         @if (viewTask.remarks) {
           <div class="view-section">
@@ -361,6 +401,55 @@
   </div>
 }
 
+@if (showSubtaskPopup && viewSubtaskTask) {
+  <div class="modal-overlay" (click)="closeSubtaskPopup()">
+    <div class="modal subtask-popup-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">👥 Subtasks</div>
+        <button class="btn-icon" (click)="closeSubtaskPopup()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (viewSubtaskTask.subtasks && viewSubtaskTask.subtasks.length > 0) {
+          <div class="subtask-popup-list">
+            @for (sub of viewSubtaskTask.subtasks; track sub._id) {
+              <div class="subtask-popup-item" [class.completed]="sub.isCompleted">
+                <div class="subtask-glow" [class.green]="sub.isCompleted"></div>
+                <div class="subtask-check-col">
+                  <input
+                    type="checkbox"
+                    [checked]="sub.isCompleted"
+                    (change)="completeSubtaskFromEvent(viewSubtaskTask, sub._id, $event)"
+                    [disabled]="completingSubtaskId === sub._id || !canCompleteSubtask(sub)"
+                    class="subtask-checkbox"
+                  />
+                </div>
+                <div class="subtask-info-col">
+                  <div class="subtask-popup-desc" [class.line-through]="sub.isCompleted">
+                    {{ sub.description }}
+                  </div>
+                  <div class="subtask-popup-user">
+                    👤 {{ sub.assignedTo }}
+                    @if (sub.isCompleted && sub.completedBy) {
+                      <span class="completed-by"> — done by {{ sub.completedBy }}</span>
+                    }
+                  </div>
+                </div>
+                <div class="subtask-status-col">
+                  @if (sub.isCompleted) {
+                    <span class="completed-check">✓</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="text-muted" style="text-align: center; padding: 24px;">No subtasks</div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
 @if (showModal) {
   <div class="modal-overlay">
     <div class="modal">
@@ -401,31 +490,106 @@
           </div>
 
           <div class="form-group">
-            <label>Assigned Person <span class="req">*</span></label>
-            <select [(ngModel)]="form.person" (ngModelChange)="onPersonChange($event)" [disabled]="saving">
-              @for (p of persons; track p) {
-                <option [value]="p">{{ p }}</option>
+            <label>Assigned Persons <span class="req">*</span></label>
+            <div class="person-dropdown">
+              <button
+                type="button"
+                class="person-dropdown-btn"
+                (click)="togglePersonDropdown()"
+                [disabled]="saving"
+              >
+                <span class="person-dropdown-text">{{ selectedPersons.length > 0 ? selectedPersons.join(', ') : 'Select persons...' }}</span>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              @if (personDropdownOpen) {
+                <div class="person-dropdown-panel">
+                  @for (p of persons; track p) {
+                    <label class="person-dropdown-option">
+                      <input
+                        type="checkbox"
+                        [checked]="selectedPersons.includes(p) || (!multiAssignMode && form.person === p)"
+                        (change)="updateAssigneeSelectionFromEvent(p, $event)"
+                        [disabled]="saving"
+                      />
+                      <span>{{ p }}</span>
+                    </label>
+                  }
+                </div>
               }
-            </select>
+            </div>
+            @if (!multiAssignMode && selectedPersons.length <= 1) {
+              <div class="text-xs text-muted" style="margin-top: 4px">Select multiple for multi-assign with subtasks</div>
+            }
+            @if (multiAssignMode) {
+              <div class="text-xs" style="margin-top: 4px; color: var(--amber, #f5a623)">Multi-assign mode — subtasks will be created per user</div>
+            }
           </div>
 
-          <div class="form-group">
-            <label>Approval By</label>
-            <select [(ngModel)]="form.approverUserId" [disabled]="saving">
-              <option value="">Self (auto-approve)</option>
-              @for (p of approverOptions; track p) {
-                <option [value]="p">{{ p }}</option>
-              }
-            </select>
+          <div class="form-group form-group-row">
+            <div class="form-group-inner">
+              <label>Approval By</label>
+              <select [(ngModel)]="form.approverUserId" [disabled]="saving">
+                <option value="">Self (auto-approve)</option>
+                @for (p of approverOptions; track p) {
+                  <option [value]="p">{{ p }}</option>
+                }
+              </select>
+            </div>
+            @if (multiAssignMode) {
+              <div class="form-group-inner form-group-title">
+                <label>Task Title <span class="req">*</span></label>
+                <input
+                  type="text"
+                  [(ngModel)]="form.taskTitle"
+                  placeholder="Enter task title..."
+                  [disabled]="saving"
+                />
+              </div>
+            }
           </div>
 
           <div class="form-group full">
-            <label>Description <span class="req">*</span></label>
-            <textarea
-              [(ngModel)]="form.description"
-              placeholder="Describe the task..."
-              [disabled]="saving"
-            ></textarea>
+            @if (!multiAssignMode) {
+              <label>Description <span class="req">*</span></label>
+              <textarea
+                [(ngModel)]="form.description"
+                placeholder="Describe the task..."
+                [disabled]="saving"
+              ></textarea>
+            } @else {
+              <label>Subtasks <span class="req">*</span></label>
+              <div class="subtask-entries">
+                @for (entry of subtaskEntries; track idx; let idx = $index) {
+                  <div class="subtask-entry-row">
+                    <input
+                      type="text"
+                      [(ngModel)]="entry.description"
+                      placeholder="Subtask description..."
+                      [disabled]="saving"
+                      class="subtask-input"
+                    />
+                    <select [(ngModel)]="entry.assignedTo" [disabled]="saving" class="subtask-assign">
+                      @for (p of selectedPersons; track p) {
+                        <option [value]="p">{{ p }}</option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="btn-icon btn-icon-sm"
+                      (click)="removeSubtaskRow(idx)"
+                      [disabled]="saving || subtaskEntries.length <= 1"
+                      title="Remove subtask"
+                    >✕</button>
+                  </div>
+                }
+                <button
+                  type="button"
+                  class="btn btn-sm btn-secondary subtask-add-btn"
+                  (click)="addSubtaskRow()"
+                  [disabled]="saving"
+                >+ Add Subtask</button>
+              </div>
+            }
           </div>
 
           <div class="form-group">

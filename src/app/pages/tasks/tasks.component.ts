@@ -10,6 +10,7 @@ import { SocketService } from "../../core/services/socket.service";
 import { Router } from "@angular/router";
 import {
   Priority,
+  Subtask,
   Task,
   TaskPayload,
   TaskStatus,
@@ -83,6 +84,16 @@ export class TasksComponent implements OnInit, OnDestroy {
   priorities: Priority[] = ["Low", "Medium", "High", "Urgent"];
   workingTypes: WorkingType[] = ["Frontend", "Backend", "Both"];
   quickFilter = "all";
+
+  // Multi-assign states
+  multiAssignMode = false;
+  selectedPersons: string[] = [];
+  subtaskEntries: { description: string; assignedTo: string }[] = [];
+  showSubtaskPopup = false;
+  viewSubtaskTask: Task | null = null;
+  completingSubtaskId = "";
+  personDropdownOpen = false;
+
   form: TaskPayload = this.emptyForm();
 
   private searchSubject = new Subject<void>();
@@ -347,6 +358,10 @@ export class TasksComponent implements OnInit, OnDestroy {
     this.editId = "";
     this.selectedFiles = [];
     this.editingTaskAttachments = [];
+    this.multiAssignMode = false;
+    this.selectedPersons = [this.auth.currentUser()?.name || "Ameen"];
+    this.subtaskEntries = [];
+    this.personDropdownOpen = false;
     this.form = this.emptyForm();
     this.showModal = true;
   }
@@ -355,22 +370,46 @@ export class TasksComponent implements OnInit, OnDestroy {
     this.editId = task._id;
     this.selectedFiles = [];
     this.editingTaskAttachments = task.attachments || [];
-    this.form = {
-      date: task.date,
-      module: task.module,
-      page: task.page,
-      description: task.description,
-      workingType: task.workingType,
-      status: task.status,
-      person: task.person,
-      priority: task.priority,
-      remarks: task.remarks || "",
-      deadlineDate: task.deadlineDate || "",
-      deadlineTime: task.deadlineTime || "",
-      estimatedHours: task.estimatedHours || 0,
-      payload: "",
-      approverUserId: task.approverUserId || "",
-    };
+
+    if (task.isMultiAssignment) {
+      this.multiAssignMode = true;
+      const assignedFromSubtask = [...new Set((task.subtasks || []).map(st => st.assignedTo).filter(Boolean))];
+      this.selectedPersons = (task.assignedUsers && task.assignedUsers.length > 0)
+        ? [...task.assignedUsers]
+        : assignedFromSubtask;
+      this.subtaskEntries = (task.subtasks || []).map(st => ({
+        description: st.description,
+        assignedTo: st.assignedTo,
+      }));
+      this.form = {
+        ...this.emptyForm(),
+        description: task.taskTitle || task.description || "",
+        taskTitle: task.taskTitle || "",
+        isMultiAssignment: true,
+        assignedUsers: [...this.selectedPersons],
+        subtasks: this.subtaskEntries,
+      };
+    } else {
+      this.multiAssignMode = false;
+      this.selectedPersons = [];
+      this.subtaskEntries = [];
+      this.form = {
+        date: task.date,
+        module: task.module,
+        page: task.page,
+        description: task.description,
+        workingType: task.workingType,
+        status: task.status,
+        person: task.person,
+        priority: task.priority,
+        remarks: task.remarks || "",
+        deadlineDate: task.deadlineDate || "",
+        deadlineTime: task.deadlineTime || "",
+        estimatedHours: task.estimatedHours || 0,
+        payload: "",
+        approverUserId: task.approverUserId || "",
+      };
+    }
 
     this.showModal = true;
   }
@@ -381,6 +420,10 @@ export class TasksComponent implements OnInit, OnDestroy {
     this.selectedFiles = [];
     this.editingTaskAttachments = [];
     this.editId = "";
+    this.multiAssignMode = false;
+    this.selectedPersons = [];
+    this.subtaskEntries = [];
+    this.personDropdownOpen = false;
   }
 
   onFilesSelected(event: Event): void {
@@ -394,14 +437,43 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   saveTask(): void {
     if (this.saving) return;
-    if (
-      !this.form.date ||
-      !this.form.module ||
-      !this.form.page ||
-      !this.form.description
-    ) {
-      alert("Please fill all required fields.");
-      return;
+
+    if (this.multiAssignMode) {
+      if (!this.form.date || !this.form.module || !this.form.page) {
+        alert("Please fill all required fields.");
+        return;
+      }
+      if (!this.form.taskTitle || !this.form.taskTitle.trim()) {
+        alert("Please enter a task title.");
+        return;
+      }
+      if (this.subtaskEntries.length === 0 || this.subtaskEntries.some(e => !e.description.trim())) {
+        alert("Please add at least one subtask with a description.");
+        return;
+      }
+      if (this.selectedPersons.length < 2) {
+        alert("Select at least 2 users for multi-assignment.");
+        return;
+      }
+
+      this.form.isMultiAssignment = true;
+      this.form.assignedUsers = this.selectedPersons;
+      this.form.subtasks = this.subtaskEntries.map(e => ({
+        description: e.description.trim(),
+        assignedTo: e.assignedTo,
+      }));
+      this.form.description = this.form.taskTitle.trim();
+      this.form.person = this.selectedPersons[0];
+    } else {
+      if (
+        !this.form.date ||
+        !this.form.module ||
+        !this.form.page ||
+        !this.form.description
+      ) {
+        alert("Please fill all required fields.");
+        return;
+      }
     }
 
     this.saving = true;
@@ -790,13 +862,131 @@ export class TasksComponent implements OnInit, OnDestroy {
       deadlineTime: "",
       estimatedHours: 0,
       approverUserId: "",
+      taskTitle: "",
+      isMultiAssignment: false,
+      assignedUsers: [],
+      subtasks: [],
     };
   }
+
+  // ---- Multi-assign methods ----
+
+  updateAssigneeSelection(person: string, checked: boolean): void {
+    if (checked) {
+      this.selectedPersons = [...this.selectedPersons, person];
+    } else if (this.selectedPersons.length > 1) {
+      this.selectedPersons = this.selectedPersons.filter(p => p !== person);
+    } else {
+      return; // must keep at least one selected
+    }
+
+    const wasMulti = this.multiAssignMode;
+    this.multiAssignMode = this.selectedPersons.length > 1;
+
+    // Single mode: keep form.person in sync
+    if (!this.multiAssignMode) {
+      this.form.person = this.selectedPersons[0];
+      this.onPersonChange(this.form.person);
+    }
+
+    // Auto-switch: transform single description into first subtask
+    if (this.multiAssignMode && !wasMulti && this.subtaskEntries.length === 0) {
+      this.subtaskEntries = [{
+        description: this.form.description || "",
+        assignedTo: this.selectedPersons[0],
+      }];
+      this.form.description = "";
+    }
+
+    // When going back to single mode, restore description from first subtask if any
+    if (!this.multiAssignMode && wasMulti && this.subtaskEntries.length > 0) {
+      this.form.description = this.subtaskEntries[0].description;
+      this.subtaskEntries = [];
+    }
+
+    // Ensure each subtask's assignedTo is still valid
+    this.subtaskEntries = this.subtaskEntries.filter(e => this.selectedPersons.includes(e.assignedTo));
+  }
+
+  addSubtaskRow(): void {
+    const unassigned = this.selectedPersons.find(p => !this.subtaskEntries.some(e => e.assignedTo === p));
+    this.subtaskEntries = [
+      ...this.subtaskEntries,
+      { description: "", assignedTo: unassigned || this.selectedPersons[0] },
+    ];
+  }
+
+  removeSubtaskRow(index: number): void {
+    this.subtaskEntries = this.subtaskEntries.filter((_, i) => i !== index);
+  }
+
+  openSubtaskPopup(task: Task): void {
+    this.viewSubtaskTask = task;
+    this.showSubtaskPopup = true;
+  }
+
+  closeSubtaskPopup(): void {
+    this.showSubtaskPopup = false;
+    this.viewSubtaskTask = null;
+    this.completingSubtaskId = "";
+  }
+
+  completeSubtask(task: Task, subtaskId: string, isCompleted: boolean): void {
+    this.completingSubtaskId = subtaskId;
+    this.taskService.completeSubtask(task._id, subtaskId, isCompleted).subscribe({
+      next: (res) => {
+        const updated = res.data;
+        this.allTasks = this.allTasks.map(t => t._id === updated._id ? updated : t);
+        this.cache.invalidatePrefix("tasks:");
+        if (this.viewSubtaskTask?._id === updated._id) {
+          this.viewSubtaskTask = updated;
+        }
+        this.applyClientFilters();
+        this.completingSubtaskId = "";
+      },
+      error: (err) => {
+        this.completingSubtaskId = "";
+        alert(err?.error?.message || "Failed to update subtask.");
+      },
+    });
+  }
+
+  isSubtasksAllDone(task: Task): boolean {
+    return !!(
+      task.isMultiAssignment &&
+      task.subtasks &&
+      task.subtasks.length > 0 &&
+      task.subtasks.every(st => st.isCompleted)
+    );
+  }
+
+  completeSubtaskFromEvent(task: Task, subtaskId: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.completeSubtask(task, subtaskId, checked);
+  }
+
+  updateAssigneeSelectionFromEvent(person: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.updateAssigneeSelection(person, checked);
+  }
+
+  togglePersonDropdown(): void {
+    this.personDropdownOpen = !this.personDropdownOpen;
+  }
+
+  canCompleteSubtask(subtask: Subtask): boolean {
+    return (
+      this.auth.isAdmin() ||
+      subtask.assignedTo === this.auth.currentUser()?.name
+    );
+  }
+
   get approverOptions(): string[] {
     return this.persons.filter(p => p !== this.form.person);
   }
 
   onPersonChange(person: string): void {
+    if (this.multiAssignMode) return;
     const currentUser = this.auth.currentUser()?.name;
     this.form.approverUserId = person === currentUser ? "" : "";
   }

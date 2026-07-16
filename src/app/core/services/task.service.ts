@@ -90,6 +90,10 @@ export class TaskService {
     );
   }
 
+  completeSubtask(taskId: string, subtaskId: string, isCompleted: boolean) {
+    return this.http.patch<ApiResponse<Task>>(`${this.api}/${taskId}/subtasks/${subtaskId}`, { isCompleted });
+  }
+
   deleteTask(id: string) {
     return this.http.delete<ApiResponse<null>>(`${this.api}/${id}`);
   }
@@ -121,6 +125,14 @@ export class TaskService {
     formData.append("estimatedHours", String(data.estimatedHours || 0));
     if (data.changeRemark) formData.append("changeRemark", data.changeRemark);
     if (data.approverUserId) formData.append("approverUserId", data.approverUserId);
+
+    if (data.taskTitle) formData.append("taskTitle", data.taskTitle);
+    if (data.isMultiAssignment) {
+      formData.append("isMultiAssignment", "true");
+      formData.append("assignedUsers", JSON.stringify(data.assignedUsers || []));
+      formData.append("subtasks", JSON.stringify(data.subtasks || []));
+    }
+
     files.forEach((file) => formData.append("attachments", file));
 
     return formData;
