@@ -11,6 +11,7 @@ import { BugsComponent } from "./pages/bugs/bugs.component";
 import { BacklogComponent } from "./pages/backlog/backlog.component";
 import { ApprovalsComponent } from "./pages/approvals/approvals.component";
 import { NotificationsComponent } from "./pages/notifications/notifications.component";
+import { SnippetsComponent } from "./pages/snippets/snippets.component";
 export const routes: Routes = [
   { path: "login", component: LoginComponent },
   {
@@ -68,6 +69,7 @@ export const routes: Routes = [
       },
       { path: "history", component: HistoryComponent },
       { path: "reports", component: ReportsComponent },
+      { path: "snippets", component: SnippetsComponent },
       { path: "users", component: UsersComponent },
     ],
   },

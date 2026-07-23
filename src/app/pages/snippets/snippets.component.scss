@@ -1,0 +1,242 @@
+/* ===================== Language Badges ===================== */
+.lang-badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.lang-typescript { background: rgba(49, 120, 198, 0.2); color: #569cd6; }
+.lang-javascript { background: rgba(240, 219, 79, 0.2); color: #f0db4f; }
+.lang-html { background: rgba(227, 76, 38, 0.2); color: #e74c3c; }
+.lang-css { background: rgba(102, 51, 153, 0.2); color: #9966cc; }
+.lang-scss { background: rgba(204, 102, 153, 0.2); color: #cc6699; }
+.lang-csharp { background: rgba(0, 119, 0, 0.2); color: #178600; }
+.lang-sql { background: rgba(0, 150, 150, 0.2); color: #00aaff; }
+.lang-json { background: rgba(128, 128, 128, 0.2); color: #aaa; }
+.lang-shell { background: rgba(0, 0, 0, 0.3); color: #ccc; }
+.lang-other { background: rgba(128, 128, 128, 0.15); color: var(--text2); }
+
+/* ===================== Tag Chips ===================== */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+.tag-chip-removable {
+  padding-right: 4px;
+}
+.tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text3);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+.tag-remove:hover { color: var(--backend); }
+
+/* ===================== Tag Input ===================== */
+.tag-input-wrap input {
+  width: 100%;
+}
+
+/* ===================== Favorite Button ===================== */
+.fav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text3);
+  transition: transform 0.2s, color 0.2s;
+  padding: 2px;
+  line-height: 1;
+}
+.fav-btn:hover { transform: scale(1.3); }
+.fav-btn.fav-active {
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+/* ===================== View Modal ===================== */
+.snippet-view-modal {
+  width: 800px;
+  max-width: 95vw;
+}
+
+/* ===================== Code Block ===================== */
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.code-block-header .view-label { margin-bottom: 0; }
+.code-block {
+  background: #1e1e1e;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.code-block pre {
+  margin: 0;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #d4d4d4;
+  white-space: pre;
+}
+.code-block code {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* ===================== Instructions Content ===================== */
+.instructions-content {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  font-size: 13px;
+}
+
+/* ===================== Screenshot Grid ===================== */
+.screenshot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+.screenshot-thumb {
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: border-color 0.15s;
+  aspect-ratio: 16 / 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+}
+.screenshot-thumb:hover { border-color: var(--accent); }
+.screenshot-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.screenshot-thumb .placeholder {
+  color: var(--text3);
+  font-size: 12px;
+}
+
+/* ===================== Attachment List ===================== */
+.attachment-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.attachment-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.attachment-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===================== Meta Row ===================== */
+.meta-row {
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+/* ===================== Lightbox ===================== */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  z-index: 10;
+}
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  object-fit: contain;
+}
+
+/* ===================== Form Modal ===================== */
+.snippet-form-modal {
+  width: 700px;
+  max-width: 95vw;
+}
+
+.code-textarea {
+  font-family: 'Consolas', 'Courier New', monospace !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  background: #1e1e1e !important;
+  color: #d4d4d4 !important;
+  tab-size: 2;
+  resize: vertical;
+  min-height: 200px;
+}
+
+/* ===================== Fav Toggle ===================== */
+.fav-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 24px;
+}
+.fav-toggle-label input { width: auto; }
+
+/* ===================== Responsive ===================== */
+@media (max-width: 700px) {
+  .screenshot-grid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,414 @@
+<div id="topbar">
+  <h1>📝 Snippets</h1>
+
+  <button class="btn btn-primary" (click)="openAdd()">+ Add Snippet</button>
+</div>
+
+<div id="content" style="overflow-y: auto; height: 100%">
+  <!-- Tabs -->
+  <div class="quick-filters">
+    <button class="qf-btn" [class.active]="tab === 'all'" (click)="setTab('all')">All</button>
+    <button class="qf-btn" [class.active]="tab === 'favorites'" (click)="setTab('favorites')">★ Favorites</button>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Search</div>
+      <input type="text" class="search-input" [(ngModel)]="filters.search" (input)="onSearchInput()" placeholder="Search title, code, tags..." />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Language</div>
+      <select [(ngModel)]="filters.language" (change)="loadSnippets()">
+        <option value="">All</option>
+        @for (lang of languages; track lang) {
+          <option [value]="lang">{{ lang }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Module</div>
+      <input type="text" [(ngModel)]="filters.module" (input)="loadSnippets()" placeholder="Module" />
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Sort</div>
+      <select [ngModel]="sort" (ngModelChange)="setSort($event)">
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="most-used">Most Used</option>
+        <option value="az">A–Z</option>
+      </select>
+    </div>
+
+    <button class="btn btn-secondary btn-sm" (click)="clearFilters()">✕ Clear</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-header">
+      <span class="table-count">{{ filteredSnippets.length }} snippets</span>
+      <button class="btn-icon ml-auto" (click)="loadSnippets()">↻</button>
+    </div>
+
+    <div style="overflow-x: auto">
+      @if (loading) {
+        <div style="padding: 40px; text-align: center; color: var(--text3)">Loading snippets...</div>
+      } @else if (error) {
+        <div style="padding: 40px; text-align: center; color: var(--backend)">{{ error }}</div>
+      } @else if (filteredSnippets.length === 0) {
+        <div style="padding: 50px 20px; text-align: center">
+          <div style="font-size: 40px; margin-bottom: 12px">📝</div>
+          <div style="font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--text2)">No snippets yet</div>
+          <div style="color: var(--text3); margin-top: 6px; font-size: 13px">Add your first snippet to build your personal code library.</div>
+          <button class="btn btn-primary" style="margin-top: 16px" (click)="openAdd()">+ Add Snippet</button>
+        </div>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Language</th>
+              <th>Tags</th>
+              <th>Module / Page</th>
+              <th>Used</th>
+              <th>★</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sn of filteredSnippets; track sn._id) {
+              <tr class="clickable-row" (click)="openView(sn)">
+                <td>
+                  <strong>{{ sn.title }}</strong>
+                  @if (sn.description) {
+                    <div class="text-xs text-muted">{{ sn.description }}</div>
+                  }
+                </td>
+
+                <td>
+                  <span class="lang-badge" [class]="langClass(sn.language)">{{ sn.language }}</span>
+                </td>
+
+                <td>
+                  <div class="tag-list">
+                    @for (tag of sn.tags; track tag) {
+                      <span class="tag-chip">{{ tag }}</span>
+                    }
+                  </div>
+                </td>
+
+                <td class="text-xs text-muted">
+                  @if (sn.module) {
+                    <div>{{ sn.module }}</div>
+                    @if (sn.page) {
+                      <div>/ {{ sn.page }}</div>
+                    }
+                  } @else {
+                    <span>—</span>
+                  }
+                </td>
+
+                <td class="text-xs text-muted">{{ sn.usageCount || 0 }}</td>
+
+                <td>
+                  <button class="fav-btn" [class.fav-active]="sn.isFavorite" (click)="toggleFav(sn, $event)" title="Toggle favorite">
+                    {{ sn.isFavorite ? '★' : '☆' }}
+                  </button>
+                </td>
+
+                <td class="td-date">{{ sn.createdAt | date: 'dd-MMM-yyyy' }}</td>
+
+                <td>
+                  <div class="td-actions" (click)="$event.stopPropagation()">
+                    <button class="btn-icon" (click)="openView(sn)" title="View">👁️</button>
+                    <button class="btn-icon" (click)="openEdit(sn)" title="Edit">✏️</button>
+                    <button class="btn-icon danger" (click)="deleteSnippet(sn)" title="Delete">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- ======================== VIEW MODAL ======================== -->
+@if (showViewModal && viewSnippet) {
+  <div class="modal-overlay" (click)="closeViewModal()">
+    <div class="modal snippet-view-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">{{ viewSnippet.title }}</div>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <span class="lang-badge" [class]="langClass(viewSnippet.language)">{{ viewSnippet.language }}</span>
+          <button class="btn-icon" (click)="closeViewModal()">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tags -->
+        @if (viewSnippet.tags?.length) {
+          <div class="view-section">
+            <div class="tag-list">
+              @for (tag of viewSnippet.tags; track tag) {
+                <span class="tag-chip">{{ tag }}</span>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Description -->
+        @if (viewSnippet.description) {
+          <div class="view-section">
+            <div class="view-label">Description</div>
+            <div class="view-content">{{ viewSnippet.description }}</div>
+          </div>
+        }
+
+        <!-- Instructions -->
+        @if (viewSnippet.instructions) {
+          <div class="view-section">
+            <div class="view-label">Instructions / Notes</div>
+            <div class="view-content instructions-content">{{ viewSnippet.instructions }}</div>
+          </div>
+        }
+
+        <!-- Code block -->
+        <div class="view-section">
+          <div class="code-block-header">
+            <div class="view-label">Code</div>
+            <button class="btn btn-secondary btn-sm" (click)="copyCode(viewSnippet.code, viewSnippet._id)">
+              {{ copiedCodeId === viewSnippet._id ? 'Copied ✓' : 'Copy Code' }}
+            </button>
+          </div>
+          <div class="code-block">
+            <pre><code>{{ viewSnippet.code }}</code></pre>
+          </div>
+        </div>
+
+        <!-- Screenshots -->
+        @if (viewSnippet.attachments?.length) {
+          <div class="view-section">
+            <div class="view-label">Attachments</div>
+
+            <!-- Images grid -->
+            @if (getViewImages(viewSnippet).length) {
+              <div class="screenshot-grid">
+                @for (file of viewSnippet.attachments; track file.fileName) {
+                  @if (isImageFile(file)) {
+                    <div class="screenshot-thumb" (click)="openLightbox(getAttachmentUrl(file.filePath))">
+                      <img [src]="getAttachmentUrl(file.filePath)" [alt]="file.originalName" />
+                    </div>
+                  }
+                }
+              </div>
+            }
+
+            <!-- Non-image files -->
+            @if (getViewFiles(viewSnippet).length) {
+              <div class="attachment-list">
+                @for (file of viewSnippet.attachments; track file.fileName) {
+                  @if (!isImageFile(file)) {
+                    <div class="attachment-row">
+                      <span>{{ fileIcon(file.mimeType) }}</span>
+                      <span class="attachment-name">{{ file.originalName }}</span>
+                      <span class="text-xs text-muted">{{ formatSize(file.size) }}</span>
+                      <a [href]="getAttachmentUrl(file.filePath)" target="_blank" class="btn btn-secondary btn-sm">Download</a>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Meta -->
+        <div class="view-section meta-row">
+          <span class="text-xs text-muted">
+            Created by <strong>{{ viewSnippet.createdBy }}</strong> ·
+            {{ viewSnippet.createdAt | date: 'dd-MMM-yyyy HH:mm' }}
+            @if (viewSnippet.updatedAt !== viewSnippet.createdAt) {
+              <span> · Updated {{ viewSnippet.updatedAt | date: 'dd-MMM-yyyy' }}</span>
+            }
+            <span> · Used {{ viewSnippet.usageCount || 0 }} times</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="toggleFav(viewSnippet)">
+          {{ viewSnippet.isFavorite ? '★ Unfavorite' : '☆ Favorite' }}
+        </button>
+        <button class="btn btn-secondary" (click)="markUsed(viewSnippet)">✓ Mark as Used</button>
+        <button class="btn btn-secondary" (click)="exportMarkdown(viewSnippet)">⬇ Export .md</button>
+        <button class="btn btn-secondary" (click)="openEdit(viewSnippet)">✏️ Edit</button>
+        <button class="btn btn-secondary" (click)="closeViewModal()">Close</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ======================== LIGHTBOX ======================== -->
+@if (lightboxImage) {
+  <div class="lightbox-overlay" (click)="closeLightbox()" (keydown.escape)="closeLightbox()" tabindex="0">
+    <button class="lightbox-close" (click)="closeLightbox()">✕</button>
+    <img [src]="lightboxImage" class="lightbox-img" (click)="$event.stopPropagation()" />
+  </div>
+}
+
+<!-- ======================== FORM MODAL ======================== -->
+@if (showModal) {
+  <div class="modal-overlay">
+    <div class="modal snippet-form-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">{{ editId ? 'Edit Snippet' : 'Add Snippet' }}</div>
+        <button class="btn-icon" (click)="closeModal()" [disabled]="saving">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <!-- Title -->
+          <div class="form-group full">
+            <label>Title <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="form.title" placeholder="e.g. Debounce function" [disabled]="saving" />
+          </div>
+
+          <!-- Language + Favorite -->
+          <div class="form-group">
+            <label>Language</label>
+            <select [(ngModel)]="form.language" [disabled]="saving">
+              @for (lang of languages; track lang) {
+                <option [value]="lang">{{ lang }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group" style="justify-content: flex-end">
+            <label class="fav-toggle-label">
+              <input type="checkbox" [(ngModel)]="form.isFavorite" [disabled]="saving" />
+              Mark as Favorite
+            </label>
+          </div>
+
+          <!-- Tags -->
+          <div class="form-group full">
+            <label>Tags</label>
+            <div class="tag-input-wrap">
+              <input
+                type="text"
+                [(ngModel)]="tagInput"
+                (keydown)="addTag($event)"
+                placeholder="Type and press Enter to add tags..."
+                [disabled]="saving"
+              />
+            </div>
+            @if (form.tags.length) {
+              <div class="tag-list" style="margin-top: 6px">
+                @for (tag of form.tags; track tag) {
+                  <span class="tag-chip tag-chip-removable">
+                    {{ tag }}
+                    <button class="tag-remove" (click)="removeTag(tag)" [disabled]="saving">×</button>
+                  </span>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Module + Page -->
+          <div class="form-group">
+            <label>Module</label>
+            <input type="text" [(ngModel)]="form.module" placeholder="e.g. Procurement" [disabled]="saving" />
+          </div>
+
+          <div class="form-group">
+            <label>Page</label>
+            <input type="text" [(ngModel)]="form.page" placeholder="e.g. Purchase Order Page" [disabled]="saving" />
+          </div>
+
+          <!-- Description -->
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea [(ngModel)]="form.description" placeholder="What this snippet does, when to use it..." rows="3" [disabled]="saving"></textarea>
+          </div>
+
+          <!-- Code -->
+          <div class="form-group full">
+            <label>Code <span class="req">*</span></label>
+            <textarea
+              class="code-textarea"
+              [(ngModel)]="form.code"
+              placeholder="Paste your code here..."
+              rows="12"
+              [disabled]="saving"
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <!-- Instructions -->
+          <div class="form-group full">
+            <label>Instructions / Notes</label>
+            <textarea
+              [(ngModel)]="form.instructions"
+              placeholder="Step-by-step notes, gotchas, how to integrate..."
+              rows="6"
+              [disabled]="saving"
+            ></textarea>
+          </div>
+
+          <!-- File upload -->
+          <div class="form-group full">
+            <label>Attachments</label>
+            <input
+              type="file"
+              multiple
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar"
+              (change)="onFilesSelected($event)"
+              [disabled]="saving"
+            />
+
+            @if (selectedFiles.length) {
+              <div class="selected-files">
+                @for (file of selectedFiles; track file.name; let i = $index) {
+                  <div class="selected-file">
+                    📎 {{ file.name }}
+                    <button type="button" class="remove-file" (click)="removeSelectedFile(i)" [disabled]="saving">✕</button>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (editingAttachments.length) {
+              <div class="saved-attachments">
+                <div class="saved-title">Saved Attachments</div>
+                @for (file of editingAttachments; track file.fileName) {
+                  <div class="saved-attachment">
+                    <span>{{ fileIcon(file.mimeType) }}</span>
+                    <span class="attachment-name">{{ file.originalName }}</span>
+                    <span class="text-xs text-muted">{{ formatSize(file.size) }}</span>
+                    <button type="button" class="btn btn-danger btn-sm" (click)="deleteSavedAttachment(file.fileName)" [disabled]="saving">Delete</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()" [disabled]="saving">Cancel</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving">
+          @if (saving) {
+            <span class="spinner"></span> Saving...
+          } @else {
+            {{ editId ? 'Update Snippet' : 'Save Snippet' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
