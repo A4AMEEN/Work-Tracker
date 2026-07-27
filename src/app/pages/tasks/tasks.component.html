@@ -550,12 +550,41 @@
 
           <div class="form-group full">
             @if (!multiAssignMode) {
-              <label>Description <span class="req">*</span></label>
-              <textarea
-                [(ngModel)]="form.description"
-                placeholder="Describe the task..."
-                [disabled]="saving"
-              ></textarea>
+              <label>Task Items <span class="req">*</span></label>
+              <div class="task-items-input-row">
+                <input
+                  type="text"
+                  [(ngModel)]="newTaskInput"
+                  placeholder="Type a task and press Enter or click Add"
+                  (keyup.enter)="addTaskItem()"
+                  [disabled]="saving"
+                />
+                <button
+                  type="button"
+                  class="btn btn-sm btn-primary task-add-btn"
+                  (click)="addTaskItem()"
+                  [disabled]="saving || !newTaskInput.trim()"
+                >+ Add</button>
+              </div>
+              @if (taskItems.length) {
+                <div class="task-items-list">
+                  @for (item of taskItems; track idx; let idx = $index) {
+                    <div class="task-item-row">
+                      <span class="task-item-bullet">*</span>
+                      <span class="task-item-text">{{ item }}</span>
+                      <button
+                        type="button"
+                        class="btn-icon task-item-remove"
+                        (click)="removeTaskItem(idx)"
+                        [disabled]="saving"
+                        title="Remove"
+                      >✕</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="text-xs text-muted task-items-hint">Add one or more task items using the input above</div>
+              }
             } @else {
               <label>Subtasks <span class="req">*</span></label>
               <div class="subtask-entries">

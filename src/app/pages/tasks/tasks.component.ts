@@ -96,6 +96,9 @@ export class TasksComponent implements OnInit, OnDestroy {
 
   form: TaskPayload = this.emptyForm();
 
+  taskItems: string[] = [];
+  newTaskInput = '';
+
   private searchSubject = new Subject<void>();
   private subs = new Subscription();
 
@@ -362,6 +365,8 @@ export class TasksComponent implements OnInit, OnDestroy {
     this.selectedPersons = [this.auth.currentUser()?.name || "Ameen"];
     this.subtaskEntries = [];
     this.personDropdownOpen = false;
+    this.taskItems = [];
+    this.newTaskInput = '';
     this.form = this.emptyForm();
     this.showModal = true;
   }
@@ -393,11 +398,20 @@ export class TasksComponent implements OnInit, OnDestroy {
       this.multiAssignMode = false;
       this.selectedPersons = [];
       this.subtaskEntries = [];
+      const desc = task.description || '';
+      if (desc.includes('\n* ') || desc.startsWith('* ')) {
+        this.taskItems = desc.split('\n').map(l => l.replace(/^\*\s*/, '')).filter(Boolean);
+      } else if (desc) {
+        this.taskItems = [desc];
+      } else {
+        this.taskItems = [];
+      }
+      this.newTaskInput = '';
       this.form = {
         date: task.date,
         module: task.module,
         page: task.page,
-        description: task.description,
+        description: '',
         workingType: task.workingType,
         status: task.status,
         person: task.person,
@@ -465,13 +479,14 @@ export class TasksComponent implements OnInit, OnDestroy {
       this.form.description = this.form.taskTitle.trim();
       this.form.person = this.selectedPersons[0];
     } else {
+      this.form.description = this.buildDescription();
       if (
         !this.form.date ||
         !this.form.module ||
         !this.form.page ||
         !this.form.description
       ) {
-        alert("Please fill all required fields.");
+        alert("Please fill all required fields. Add at least one task item.");
         return;
       }
     }
@@ -867,6 +882,22 @@ export class TasksComponent implements OnInit, OnDestroy {
       assignedUsers: [],
       subtasks: [],
     };
+  }
+
+  addTaskItem(): void {
+    const text = this.newTaskInput?.trim();
+    if (!text) return;
+    this.taskItems = [...this.taskItems, text];
+    this.newTaskInput = '';
+  }
+
+  removeTaskItem(index: number): void {
+    this.taskItems = this.taskItems.filter((_, i) => i !== index);
+  }
+
+  private buildDescription(): string {
+    if (!this.taskItems.length) return '';
+    return this.taskItems.map(item => `* ${item}`).join('\n');
   }
 
   // ---- Multi-assign methods ----

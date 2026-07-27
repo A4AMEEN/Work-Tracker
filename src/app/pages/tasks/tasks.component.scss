@@ -769,3 +769,77 @@ button:disabled {
   outline: none;
 }
 
+/* ── Bulleted Task Items ── */
+.task-items-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.task-items-input-row input {
+  flex: 1;
+}
+
+.task-add-btn {
+  white-space: nowrap;
+  height: 38px;
+}
+
+.task-items-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.task-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+}
+
+.task-item-bullet {
+  font-weight: 800;
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.task-item-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.task-item-remove {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: 0.15s;
+}
+
+.task-item-remove:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--backend);
+}
+
+.task-items-hint {
+  margin-top: 6px;
+}
+

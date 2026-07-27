@@ -31,4 +31,12 @@ getDailyReport(date: string, mode = 'taskDate', person = '') {
 
   return this.http.get<any>(`${environment.apiUrl}/reports/daily`, { params });
 }
+
+getUserReport(filters: Record<string, string>) {
+  let params = new HttpParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params = params.set(key, value);
+  });
+  return this.http.get<any>(`${environment.apiUrl}/reports/user-report`, { params });
+}
 }

@@ -1,217 +1,447 @@
 <div id="topbar">
   <h1>Reports</h1>
-  <button class="btn btn-secondary btn-sm" (click)="exportCSV()">⬇ Export CSV</button>
+  <div class="topbar-actions">
+    @if (activeTab === 'summary' && summaryData?.tasks?.length) {
+      <button class="btn btn-secondary btn-sm" (click)="exportCSV()">⬇ Export CSV</button>
+    }
+  </div>
 </div>
 
 <div id="content">
-  <div class="dash-box" style="margin-bottom: 20px;">
-    <div class="section-title">📲 Daily WhatsApp Report</div>
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'daily'" (click)="setActiveTab('daily')">
+      <span class="tab-icon">📲</span> Daily WhatsApp
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'summary'" (click)="setActiveTab('summary')">
+      <span class="tab-icon">📊</span> Summary
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'weekly'" (click)="setActiveTab('weekly')">
+      <span class="tab-icon">📅</span> Weekly
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'monthly'" (click)="setActiveTab('monthly')">
+      <span class="tab-icon">📆</span> Monthly
+    </button>
+  </div>
 
-    <div class="filter-bar" style="margin-bottom: 12px;">
-      <div class="filter-group">
-        <div class="filter-label">Report Date</div>
-        <input type="date" [(ngModel)]="selectedDate" (change)="loadDailyReport()" />
-      </div>
-
-      <div class="filter-group">
-        <div class="filter-label">Report Mode</div>
-
-        <div class="report-mode-group">
-          <button
-            class="rm-btn"
-            [class.active]="dailyMode === 'taskDate'"
-            (click)="setDailyMode('taskDate')"
-          >
-            📅 Task Date
-          </button>
-
-          <button
-            class="rm-btn"
-            [class.active]="dailyMode === 'completedOn'"
-            (click)="setDailyMode('completedOn')"
-          >
-            ✅ Completed On
-          </button>
-
-          <button
-            class="rm-btn"
-            [class.active]="dailyMode === 'both'"
-            (click)="setDailyMode('both')"
-          >
-            🔀 Both
-          </button>
+  @if (activeTab === 'daily') {
+    <div class="dash-box">
+      <div class="section-title">Daily WhatsApp Report</div>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <div class="filter-label">Report Date</div>
+          <input type="date" [(ngModel)]="selectedDate" (change)="loadDailyReport()" />
         </div>
-        
+        <div class="filter-group">
+          <div class="filter-label">Report Mode</div>
+          <div class="report-mode-group">
+            <button class="rm-btn" [class.active]="dailyMode === 'taskDate'" (click)="setDailyMode('taskDate')">📅 Task Date</button>
+            <button class="rm-btn" [class.active]="dailyMode === 'completedOn'" (click)="setDailyMode('completedOn')">✅ Completed On</button>
+            <button class="rm-btn" [class.active]="dailyMode === 'both'" (click)="setDailyMode('both')">🔀 Both</button>
+          </div>
+        </div>
+        <div class="filter-group user-dropdown-wrap">
+          <div class="filter-label">Users</div>
+          <button type="button" class="dropdown-btn" (click)="toggleDailyUserDropdown()">
+            {{ dailyUsersLabel() }} <span>▾</span>
+          </button>
+          @if (dailyUserDropdownOpen) {
+            <div class="dropdown-menu">
+              @for (p of persons; track p) {
+                <label class="check-item">
+                  <input type="checkbox" [checked]="selectedDailyPersons.includes(p)" (change)="toggleDailyPerson(p)" />
+                  <span>{{ p }}</span>
+                </label>
+              }
+            </div>
+          }
+        </div>
+        <button class="btn btn-primary btn-sm" (click)="copyDailyReport()">📋 Copy Message</button>
+        @if (reportCopied) { <span class="copy-success">Copied ✓</span> }
       </div>
-      <div class="filter-group user-dropdown-wrap">
-  <div class="filter-label">Users</div>
-
-  <button
-    type="button"
-    class="user-dropdown-btn"
-    (click)="toggleDailyUserDropdown()"
-  >
-    {{ dailyUsersLabel() }}
-    <span>▾</span>
-  </button>
-
-  @if (dailyUserDropdownOpen) {
-    <div class="user-dropdown-menu">
-      @for (p of persons; track p) {
-        <label class="user-check-item">
-          <input
-            type="checkbox"
-            [checked]="selectedDailyPersons.includes(p)"
-            (change)="toggleDailyPerson(p)"
-          />
-          <span>{{ p }}</span>
-        </label>
-      }
+      <textarea class="whatsapp-report" readonly [value]="dailyReport?.message || 'No report found'"></textarea>
     </div>
   }
-</div>
 
-      <button class="btn btn-primary btn-sm" (click)="copyDailyReport()">
-        Copy WhatsApp Message
-      </button>
+  @if (activeTab === 'summary') {
+    <div class="filter-bar">
+      <div class="filter-group">
+        <div class="filter-label">From</div>
+        <input type="date" [(ngModel)]="filters.from" (change)="loadReport()" />
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">To</div>
+        <input type="date" [(ngModel)]="filters.to" (change)="loadReport()" />
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Mode</div>
+        <div class="report-mode-group">
+          <button class="rm-btn" [class.active]="filters.mode === 'taskDate'" (click)="setSummaryMode('taskDate')">📅 Task Date</button>
+          <button class="rm-btn" [class.active]="filters.mode === 'completedOn'" (click)="setSummaryMode('completedOn')">✅ Completed On</button>
+          <button class="rm-btn" [class.active]="filters.mode === 'both'" (click)="setSummaryMode('both')">🔀 Both</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Person</div>
+        <select [(ngModel)]="filters.person" (change)="loadReport()">
+          <option value="">All</option>
+          @for (p of persons.slice(1); track p) { <option [value]="p">{{ p }}</option> }
+        </select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Module</div>
+        <input type="text" [(ngModel)]="filters.module" (input)="loadReport()" />
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Status</div>
+        <select [(ngModel)]="filters.status" (change)="loadReport()">
+          <option value="">All</option>
+          @for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+      </div>
+    </div>
 
-      @if (reportCopied) {
-        <span class="copy-success">Copied ✓</span>
+    @if (loading) {
+      <div class="empty-state">Loading report...</div>
+    } @else if (summaryData) {
+      <div class="stat-row">
+        <div class="stat-card-sm total"><div class="stat-num-sm">{{ summaryData.total }}</div><div class="stat-label-sm">Filtered Tasks</div></div>
+        <div class="stat-card-sm done-c"><div class="stat-num-sm">{{ getSummaryCompletedCount() }}</div><div class="stat-label-sm">Completed</div></div>
+        <div class="stat-card-sm pending"><div class="stat-num-sm">{{ getSummaryStatusCount('Pending') }}</div><div class="stat-label-sm">Pending</div></div>
+        <div class="stat-card-sm working"><div class="stat-num-sm">{{ getSummaryStatusCount('Working') }}</div><div class="stat-label-sm">Working</div></div>
+      </div>
+
+      <div class="report-grid">
+        <div class="report-box full-width">
+          <div class="section-title">Person × Status Matrix</div>
+          <div class="table-wrap">
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th>Person</th>
+                  @for (s of statuses; track s) { <th class="rotate-cell">{{ s }}</th> }
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of summaryData.byPerson || []; track row.person) {
+                  <tr>
+                    <td class="matrix-person">{{ row.person }}</td>
+                    @for (s of statuses; track s) {
+                      <td class="matrix-cell">{{ getCellCount(row.person, s) }}</td>
+                    }
+                    <td class="matrix-total">{{ row.count }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-grid">
+        <div class="report-box">
+          <div class="section-title">Person Wise</div>
+          <table class="report-table">
+            @for (x of summaryData.byPerson || []; track x.person) {
+              <tr><td>{{ x.person }}</td><td class="td-num">{{ x.count }}</td></tr>
+            }
+          </table>
+        </div>
+        <div class="report-box">
+          <div class="section-title">Module Wise</div>
+          <table class="report-table">
+            @for (x of summaryData.byModule || []; track x.module) {
+              <tr><td>{{ x.module }}</td><td class="td-num">{{ x.count }}</td></tr>
+            }
+          </table>
+        </div>
+        <div class="report-box">
+          <div class="section-title">Status Wise</div>
+          <table class="report-table">
+            @for (x of summaryData.byStatus || []; track x.status) {
+              <tr><td><span class="badge" [ngClass]="getStatusBadgeClass(x.status)">{{ x.status }}</span></td><td class="td-num">{{ x.count }}</td></tr>
+            }
+          </table>
+        </div>
+        <div class="report-box">
+          <div class="section-title">Date Wise</div>
+          <table class="report-table">
+            @for (x of summaryData.byDate || []; track x.date) {
+              <tr><td class="td-date">{{ x.date }}</td><td class="td-num">{{ x.count }}</td></tr>
+            }
+          </table>
+        </div>
+      </div>
+    }
+  }
+
+  @if (activeTab === 'weekly') {
+    <div class="filter-bar">
+      <div class="filter-group">
+        <div class="filter-label">Week</div>
+        <input type="date" [(ngModel)]="weeklyDate" (change)="loadWeeklyReport()" />
+      </div>
+      <div class="filter-group user-dropdown-wrap">
+        <div class="filter-label">Users</div>
+        <button type="button" class="dropdown-btn" (click)="toggleWeeklyUserDropdown()">
+          {{ weeklyUsersLabel() }} <span>▾</span>
+        </button>
+        @if (weeklyUserDropdownOpen) {
+          <div class="dropdown-menu">
+            @for (p of persons; track p) {
+              <label class="check-item">
+                <input type="checkbox" [checked]="selectedWeeklyPersons.includes(p)" (change)="toggleWeeklyPerson(p)" />
+                <span>{{ p }}</span>
+              </label>
+            }
+          </div>
+        }
+      </div>
+      <div class="filter-group user-dropdown-wrap">
+        <div class="filter-label">Status</div>
+        <button type="button" class="dropdown-btn" (click)="toggleWeeklyStatusDropdown()">
+          {{ weeklyStatusLabel() }} <span>▾</span>
+        </button>
+        @if (weeklyStatusDropdownOpen) {
+          <div class="dropdown-menu">
+            @for (s of statuses; track s) {
+              <label class="check-item">
+                <input type="checkbox" [checked]="selectedWeeklyStatuses.includes(s)" (change)="toggleWeeklyStatus(s)" />
+                <span>{{ s }}</span>
+              </label>
+            }
+          </div>
+        }
+      </div>
+      <button class="btn btn-primary btn-sm" (click)="loadWeeklyReport()">🔄 Generate</button>
+    </div>
+
+    @if (weeklyLoading) {
+      <div class="empty-state">Loading weekly report...</div>
+    } @else if (weeklyData) {
+      @if (weeklyData.summary) {
+        <div class="stat-row">
+          <div class="stat-card-sm total"><div class="stat-num-sm">{{ weeklyData.summary.totalTasks }}</div><div class="stat-label-sm">Total Tasks</div></div>
+          <div class="stat-card-sm done-c"><div class="stat-num-sm">{{ weeklyData.summary.completedTasks }}</div><div class="stat-label-sm">Completed</div></div>
+          <div class="stat-card-sm working"><div class="stat-num-sm">{{ weeklyData.summary.completionRate }}%</div><div class="stat-label-sm">Completion Rate</div></div>
+          <div class="stat-card-sm today"><div class="stat-num-sm">{{ weeklyData.summary.totalUsers }}</div><div class="stat-label-sm">Active Users</div></div>
+        </div>
       }
-    </div>
 
-    <textarea
-      class="whatsapp-report"
-      readonly
-      [value]="dailyReport?.message || 'No report found'"
-    ></textarea>
-  </div>
+      @if (!weeklyData.periods?.length) {
+        <div class="empty-state">No tasks found for this period</div>
+      }
 
-  <div class="filter-bar">
-    <div class="filter-group">
-      <div class="filter-label">From</div>
-      <input type="date" [(ngModel)]="filters.from" (change)="loadReport()" />
-    </div>
+      @for (period of weeklyData.periods || []; track period.key) {
+        <div class="period-card">
+          <div class="period-header" (click)="toggleWeeklyPeriod(period.key)">
+            <span class="period-toggle">{{ expandedWeeklyPeriods.has(period.key) ? '▼' : '▶' }}</span>
+            <span class="period-label">{{ period.label }}</span>
+            <span class="period-count">{{ period.users.length }} users · {{ getPeriodTotalTasks(period) }} tasks</span>
+          </div>
 
-    <div class="filter-group">
-      <div class="filter-label">To</div>
-      <input type="date" [(ngModel)]="filters.to" (change)="loadReport()" />
-    </div>
+          @if (expandedWeeklyPeriods.has(period.key)) {
+            <div class="period-body">
+              @for (user of period.users || []; track user.person) {
+                <div class="user-report-card">
+                  <div class="user-card-header" (click)="toggleWeeklyUser(user.person)">
+                    <div class="user-avatar-sm">{{ user.person.charAt(0) }}</div>
+                    <div class="user-card-info">
+                      <span class="user-card-name">{{ user.person }}</span>
+                      <span class="user-card-stats">{{ user.completed }}/{{ user.total }} completed</span>
+                    </div>
+                    <div class="user-completion-bar-wrap">
+                      <div class="user-completion-bar" [style.width.%]="user.completionRate"></div>
+                    </div>
+                    <span class="user-completion-pct" [class.high]="user.completionRate >= 70" [class.med]="user.completionRate >= 40 && user.completionRate < 70" [class.low]="user.completionRate < 40">{{ user.completionRate }}%</span>
+                    <span class="user-card-toggle">{{ expandedWeeklyUsers.has(user.person) ? '▲' : '▼' }}</span>
+                  </div>
 
-    <div class="filter-group">
-      <div class="filter-label">Report Mode</div>
+                  <div class="user-status-row">
+                    @for (item of getStatusSummary(user.statuses); track item.status) {
+                      <span class="status-chip">
+                        <span class="status-dot" [style.background]="statusColor(item.status)"></span>
+                        {{ item.status }}: {{ item.count }}
+                      </span>
+                    }
+                  </div>
 
-      <div class="report-mode-group">
-        <button
-          class="rm-btn"
-          [class.active]="filters.mode === 'taskDate'"
-          (click)="setSummaryMode('taskDate')"
-        >
-          📅 Task Date
-        </button>
+                  @if (expandedWeeklyUsers.has(user.person) && user.tasks?.length) {
+                    <div class="user-task-table-wrap">
+                      <table class="user-task-table">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Module</th>
+                            <th>Page</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Type</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (task of user.tasks; track task._id) {
+                            <tr>
+                              <td class="td-date">{{ task.date }}</td>
+                              <td>{{ task.module }}</td>
+                              <td>{{ task.page }}</td>
+                              <td class="td-desc-cell" (click)="toggleTaskExpand(task._id)">
+  <span class="task-desc-inner" [class.expanded]="expandedTaskIds.has(task._id)">{{ task.description }}</span>
+  @if (task.description?.length > 50) {
+    <span class="task-expand-icon">{{ expandedTaskIds.has(task._id) ? '▲' : '▼' }}</span>
+  }
+</td>
+                              <td><span class="badge" [ngClass]="getStatusBadgeClass(task.status)">{{ task.status }}</span></td>
+                              <td><span class="badge" [ngClass]="getPriorityBadgeClass(task.priority)">{{ task.priority }}</span></td>
+                              <td><span class="badge" [ngClass]="getWorkingTypeBadgeClass(task.workingType)">{{ task.workingType }}</span></td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  }
 
-        <button
-          class="rm-btn"
-          [class.active]="filters.mode === 'completedOn'"
-          (click)="setSummaryMode('completedOn')"
-        >
-          ✅ Completed On
-        </button>
-
-        <button
-          class="rm-btn"
-          [class.active]="filters.mode === 'both'"
-          (click)="setSummaryMode('both')"
-        >
-          🔀 Both
-        </button>
+  @if (activeTab === 'monthly') {
+    <div class="filter-bar">
+      <div class="filter-group">
+        <div class="filter-label">Month</div>
+        <input type="month" [(ngModel)]="monthlyDate" (change)="loadMonthlyReport()" />
       </div>
-    </div>
-
-    <div class="filter-group">
-      <div class="filter-label">Person</div>
-      <select [(ngModel)]="filters.person" (change)="loadReport()">
-        <option value="">All</option>
-        @for (p of persons; track p) {
-          <option [value]="p">{{ p }}</option>
+      <div class="filter-group user-dropdown-wrap">
+        <div class="filter-label">Users</div>
+        <button type="button" class="dropdown-btn" (click)="toggleMonthlyUserDropdown()">
+          {{ monthlyUsersLabel() }} <span>▾</span>
+        </button>
+        @if (monthlyUserDropdownOpen) {
+          <div class="dropdown-menu">
+            @for (p of persons; track p) {
+              <label class="check-item">
+                <input type="checkbox" [checked]="selectedMonthlyPersons.includes(p)" (change)="toggleMonthlyPerson(p)" />
+                <span>{{ p }}</span>
+              </label>
+            }
+          </div>
         }
-      </select>
-    </div>
-
-    <div class="filter-group">
-      <div class="filter-label">Module</div>
-      <input type="text" [(ngModel)]="filters.module" (input)="loadReport()" />
-    </div>
-
-    <div class="filter-group">
-      <div class="filter-label">Status</div>
-      <select [(ngModel)]="filters.status" (change)="loadReport()">
-        <option value="">All</option>
-        @for (s of statuses; track s) {
-          <option [value]="s">{{ s }}</option>
+      </div>
+      <div class="filter-group user-dropdown-wrap">
+        <div class="filter-label">Status</div>
+        <button type="button" class="dropdown-btn" (click)="toggleMonthlyStatusDropdown()">
+          {{ monthlyStatusLabel() }} <span>▾</span>
+        </button>
+        @if (monthlyStatusDropdownOpen) {
+          <div class="dropdown-menu">
+            @for (s of statuses; track s) {
+              <label class="check-item">
+                <input type="checkbox" [checked]="selectedMonthlyStatuses.includes(s)" (change)="toggleMonthlyStatus(s)" />
+                <span>{{ s }}</span>
+              </label>
+            }
+          </div>
         }
-      </select>
-    </div>
-  </div>
-
-  @if (loading) {
-    <div class="empty-state">Loading report...</div>
-  } @else {
-    <div class="stat-grid">
-      <div class="stat-card total">
-        <div class="stat-num">{{ data?.total || 0 }}</div>
-        <div class="stat-label">Filtered Tasks</div>
       </div>
+      <button class="btn btn-primary btn-sm" (click)="loadMonthlyReport()">🔄 Generate</button>
     </div>
 
-    <div class="report-grid">
-      <div class="report-box">
-        <div class="section-title">Person Wise</div>
-        <table class="report-table">
-          @for (x of data?.byPerson || []; track x.person) {
-            <tr>
-              <td>{{ x.person }}</td>
-              <td>{{ x.count }}</td>
-            </tr>
-          }
-        </table>
-      </div>
+    @if (monthlyLoading) {
+      <div class="empty-state">Loading monthly report...</div>
+    } @else if (monthlyData) {
+      @if (monthlyData.summary) {
+        <div class="stat-row">
+          <div class="stat-card-sm total"><div class="stat-num-sm">{{ monthlyData.summary.totalTasks }}</div><div class="stat-label-sm">Total Tasks</div></div>
+          <div class="stat-card-sm done-c"><div class="stat-num-sm">{{ monthlyData.summary.completedTasks }}</div><div class="stat-label-sm">Completed</div></div>
+          <div class="stat-card-sm working"><div class="stat-num-sm">{{ monthlyData.summary.completionRate }}%</div><div class="stat-label-sm">Completion Rate</div></div>
+          <div class="stat-card-sm today"><div class="stat-num-sm">{{ monthlyData.summary.totalUsers }}</div><div class="stat-label-sm">Active Users</div></div>
+        </div>
+      }
 
-      <div class="report-box">
-        <div class="section-title">Module Wise</div>
-        <table class="report-table">
-          @for (x of data?.byModule || []; track x.module) {
-            <tr>
-              <td>{{ x.module }}</td>
-              <td>{{ x.count }}</td>
-            </tr>
-          }
-        </table>
-      </div>
+      @if (!monthlyData.periods?.length) {
+        <div class="empty-state">No tasks found for this period</div>
+      }
 
-      <div class="report-box">
-        <div class="section-title">Status Wise</div>
-        <table class="report-table">
-          @for (x of data?.byStatus || []; track x.status) {
-            <tr>
-              <td>{{ x.status }}</td>
-              <td>{{ x.count }}</td>
-            </tr>
-          }
-        </table>
-      </div>
+      @for (period of monthlyData.periods || []; track period.key) {
+        <div class="period-card">
+          <div class="period-header" (click)="toggleMonthlyPeriod(period.key)">
+            <span class="period-toggle">{{ expandedMonthlyPeriods.has(period.key) ? '▼' : '▶' }}</span>
+            <span class="period-label">{{ period.label }}</span>
+            <span class="period-count">{{ period.users.length }} users · {{ getPeriodTotalTasks(period) }} tasks</span>
+          </div>
 
-      <div class="report-box">
-        <div class="section-title">Date Wise</div>
-        <table class="report-table">
-          @for (x of data?.byDate || []; track x.date) {
-            <tr>
-              <td>{{ x.date }}</td>
-              <td>{{ x.count }}</td>
-            </tr>
+          @if (expandedMonthlyPeriods.has(period.key)) {
+            <div class="period-body">
+              @for (user of period.users || []; track user.person) {
+                <div class="user-report-card">
+                  <div class="user-card-header" (click)="toggleMonthlyUser(user.person)">
+                    <div class="user-avatar-sm">{{ user.person.charAt(0) }}</div>
+                    <div class="user-card-info">
+                      <span class="user-card-name">{{ user.person }}</span>
+                      <span class="user-card-stats">{{ user.completed }}/{{ user.total }} completed</span>
+                    </div>
+                    <div class="user-completion-bar-wrap">
+                      <div class="user-completion-bar" [style.width.%]="user.completionRate"></div>
+                    </div>
+                    <span class="user-completion-pct" [class.high]="user.completionRate >= 70" [class.med]="user.completionRate >= 40 && user.completionRate < 70" [class.low]="user.completionRate < 40">{{ user.completionRate }}%</span>
+                    <span class="user-card-toggle">{{ expandedMonthlyUsers.has(user.person) ? '▲' : '▼' }}</span>
+                  </div>
+
+                  <div class="user-status-row">
+                    @for (item of getStatusSummary(user.statuses); track item.status) {
+                      <span class="status-chip">
+                        <span class="status-dot" [style.background]="statusColor(item.status)"></span>
+                        {{ item.status }}: {{ item.count }}
+                      </span>
+                    }
+                  </div>
+
+                  @if (expandedMonthlyUsers.has(user.person) && user.tasks?.length) {
+                    <div class="user-task-table-wrap">
+                      <table class="user-task-table">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Module</th>
+                            <th>Page</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Type</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (task of user.tasks; track task._id) {
+                            <tr>
+                              <td class="td-date">{{ task.date }}</td>
+                              <td>{{ task.module }}</td>
+                              <td>{{ task.page }}</td>
+                              <td class="td-desc-cell" (click)="toggleTaskExpand(task._id)">
+  <span class="task-desc-inner" [class.expanded]="expandedTaskIds.has(task._id)">{{ task.description }}</span>
+  @if (task.description?.length > 50) {
+    <span class="task-expand-icon">{{ expandedTaskIds.has(task._id) ? '▲' : '▼' }}</span>
+  }
+</td>
+                              <td><span class="badge" [ngClass]="getStatusBadgeClass(task.status)">{{ task.status }}</span></td>
+                              <td><span class="badge" [ngClass]="getPriorityBadgeClass(task.priority)">{{ task.priority }}</span></td>
+                              <td><span class="badge" [ngClass]="getWorkingTypeBadgeClass(task.workingType)">{{ task.workingType }}</span></td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
           }
-        </table>
-      </div>
-    </div>
+        </div>
+      }
+    }
   }
 </div>

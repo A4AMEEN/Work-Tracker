@@ -232,6 +232,8 @@ tr:hover td { background:rgba(79,142,247,0.04); }
 .badge-backend { background:rgba(6,182,212,0.15); color:#06b6d4; }
 .badge-both { background:rgba(16,185,129,0.15); color:var(--done); }
 .badge-completed { background:rgba(16,185,129,0.15); color:var(--done); }
+.badge-testing { background:rgba(139,92,246,0.15); color:#8b5cf6; }
+.badge-rework { background:rgba(249,115,22,0.15); color:#f97316; }
 .badge-approval-pending { background:rgba(245,158,11,0.15); color:var(--pending); }
 .badge-approval-approved { background:rgba(16,185,129,0.15); color:var(--done); }
 .badge-approval-rework { background:rgba(239,68,68,0.15); color:var(--backend); }
