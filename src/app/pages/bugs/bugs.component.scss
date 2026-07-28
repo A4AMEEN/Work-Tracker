@@ -19,6 +19,15 @@
   text-overflow: ellipsis;
 }
 
+.bug-title + .td-sub {
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--text3);
+}
+
 .bug-pill {
   display: inline-flex;
   padding: 3px 8px;
